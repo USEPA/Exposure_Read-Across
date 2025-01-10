@@ -236,7 +236,7 @@ with tab1:
     
     if smiles_ready:    
         st.header("This is the section for the structural analogs")
-        #Add in the code for loading the structural analogs 
+        #Add in the code for loading the structural analogs.
         
         #First thing is to assign the Morgan fingerprints to the smiles code 
         FP_input_path = "./Morgan_fingerprints_of_DSSTox.feather"
