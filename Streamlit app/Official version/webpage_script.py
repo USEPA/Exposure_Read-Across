@@ -48,7 +48,7 @@ def import_cehd():#Returns -> DataFrame, but declaring this in the function anno
         Dataframe: The Dataframe of CEHD data
 
     """
-    osha=pd.read_csv("./FullCEHD_includingDTXSID.csv", #Dataset generated in the file "CEHD_withDTXSID_generator.ipynb"
+    osha=pd.read_parquet("./FullCEHD_includingDTXSID.parq", #Dataset generated in the file "CEHD_withDTXSID_generator.ipynb"
                     dtype={
                         'establishment_name':str,
                         'city':str,
@@ -91,14 +91,25 @@ cehd=import_cehd()
 
 @st.cache_data
 def minucci_loader():#Returns -> DataFrame, but declaring this in the function annotation throws an error
+    
     """
     Loads in the Minucci model dataset.
 
     Returns:
         Dataframe: The Dataframe of the Minucci dataset.
     """
-    minucci_path = "./predictions_with_extrapolation/consolidated_minucci.parq"
-    df = pd.read_parquet(minucci_path)
+    #This version of consolidated_minucci has been compressed with the "snappy" algorithm, which is fast to retrieve
+    #consolidated_minucci has been split into two parts so that they will be small enough to upload to github
+
+    minucci_path1 = "./predictions_with_extrapolation/consolidated_minucci_snappy_1.parq"
+    minucci_path2 = "./predictions_with_extrapolation/consolidated_minucci_snappy_2.parq"
+
+    minucci_1 = pd.read_parquet(minucci_path1)
+    minucci_2 = pd.read_parquet(minucci_path2)
+
+    df = pd.concat([minucci_1, minucci_2])
+
+
     return df
 
 
@@ -231,8 +242,8 @@ with tab1:
         FP_input_path = "./Morgan_fingerprints_of_DSSTox.feather"
         #Chose feather as the datatype because it was the fastest datatype to read and write 
         FP1 = pd.read_feather(FP_input_path)
-        cd_input_path = "./Consolidated_DSSTox_QSAR_smiles_only.feather"
-        consolidated_dsstox = pd.read_feather(cd_input_path)
+        cd_input_path = "./brotli_Consolidated_DSSTox_QSAR_smiles_only.parq"
+        consolidated_dsstox = pd.read_parquet(cd_input_path)
         consolidated_dsstox.rename(columns={'DTXSID':'ID'}, inplace=True)
         mfgen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
         interest_fp = pd.DataFrame(np.vstack(np.array(generate_ecfp(smiles_code))))
