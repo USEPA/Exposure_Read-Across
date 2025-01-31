@@ -7,8 +7,8 @@ import pandas as pd
 
 #current_dir = os.path.dirname(os.path.abspath(__file__))
 
-sys.path.append('../Official_version')
-from webpage_script import analog_finder
+sys.path.append('../Exposure_Read_Across/pages')
+from New_Chemical import analog_finder
 
 #These can be relative paths, because the interpreter is running the test from this directory 
 chem_info_path = ("./chem_info.parq") 

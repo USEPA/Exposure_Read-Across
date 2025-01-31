@@ -1,3 +1,6 @@
+#Although streamlit pages have the option of starting the page titles with a number 
+# to set their rank, doing this prevents importing functions into unit tests
+
 import pandas as pd
 import numpy as np
 #from pandas.io.formats.style import Styler
