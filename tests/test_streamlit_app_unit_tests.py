@@ -7,7 +7,7 @@ import pandas as pd
 
 #current_dir = os.path.dirname(os.path.abspath(__file__))
 
-sys.path.append('../Exposure_Read_Across/pages')
+sys.path.append(r'C:\Users\svanambe\OneDrive - Environmental Protection Agency (EPA)\Profile\Work\Projects\Exposure web app\Exposure_Read_Across\pages')
 from New_Chemical import analog_finder
 
 #These can be relative paths, because the interpreter is running the test from this directory 
