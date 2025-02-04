@@ -100,25 +100,23 @@ with st.container(border=True):
         st.markdown('###     Or, when the substance of interest is not in the DSSTox database '
                     'and information is desired on the structural analogues of the substance.')
         
-with st.form("ExistingChem"):
+with st.container(border=True):
     st.markdown("## Existing Chemical Input")
     st.markdown("### Structure")
-    st.markdown("Draw the structure in the provided space below and then click "
-                "`Apply` to retrieve information on the chemical.")
-    smiles_ready = False
+    st.markdown("Draw the structure in the provided space below and then click the "
+                "`Apply` button to retrieve information on the chemical.")
+    smiles_code = False
     smiles_code = st_ketcher() #This is where the smiles code is returned 
     
-    exst_chem_submitted = st.form_submit_button("Submit")
+    #exst_chem_submitted = st.form_submit_button("Submit")
     
-    if exst_chem_submitted:
+    if smiles_code:
         compute = True
         if len(smiles_code) == 0:
             compute = False
             st.warning("Missing SMILES string, did you forget to draw a chemical structure or not click `Apply` after drawing?")
-        else:
-            smiles_ready=True 
 
-if exst_chem_submitted:
+if smiles_code:
     # "not compute" indicates that nothing was entered into the structure box
     if not compute:
         st.error("Missing information, see input form for more information.")
@@ -221,8 +219,6 @@ if exst_chem_submitted:
                                 "Only data with a reported function has been included. "
                                 "This data facilitates the understanding of the uses of the entered substance by displaying the substance's reported functions."
                                 )  
-        
-                #Now pulling predicted functional use
                 
                 #Now pulling list presence information 
                 st.markdown('### List Presence Information')
@@ -244,22 +240,14 @@ if exst_chem_submitted:
                                                 }, inplace=True)
                     st.dataframe(list_presence) 
                 
-                
+                #Pulling product-inclusion data 
                 st.markdown('### Products Reporting This Substance')
                 pucs = expo.search_cpdat(vocab_name='puc', dtxsid=structure_dtxsid)
                 pucs_available = pd.DataFrame(pucs)
-                pucs_available_csv=pucs_available.to_csv(index=False)
-                st.download_button(
-                                    label="Download product use data as CSV",
-                                    data=function_info_csv,
-                                    file_name="functional_use_data.csv"
-                                    )
-                
-                if list_presence.empty:
+                if pucs_available.empty:
                     st.markdown('### No PUC Information Available')
                 else:
                     try:
-                        pucs_available.drop(columns=['id','dtxsid','docid',], inplace=True)
                         pucs_available.rename(columns={'doctitle':'Document Title', 
                                                     'docdate':'Document Date', 
                                                     'productname':'Product Name', 
@@ -277,32 +265,81 @@ if exst_chem_submitted:
                                                     'weightfractiontype':'Weight Fraction Type',
                                                     'component':'Component',
                                                     }, inplace=True)
-                        no_dups_pucs_available=pucs_available.drop_duplicates(subset=['Product Name', 
-                                                                                        'General Category',
-                                                                                        'Product Family',
-                                                                                        ], ignore_index=True)
                         
-                        grouped_pucs = no_dups_pucs_available.groupby(by=['General Category', 'Product Family']
-                                                                        ).size(
-                                                                        ).reset_index(name='Number of product names')
-                        grouped_pucs['PUC general category + product family combination'] = grouped_pucs['General Category'] + " + " + grouped_pucs['Product Family']
+                        pucs_available_csv=pucs_available.to_csv(index=False)
+                        st.download_button(
+                                    label="Download product use data as CSV",
+                                    data=pucs_available_csv,
+                                    file_name="functional_use_data.csv"
+                                    )
+                        pucs_available.drop(columns=['id','dtxsid','docid',], inplace=True)
+                        puc_show_opts = st.selectbox("Which level of PUC results would you like to see?", ("General Category", "Product Family", 'PUC general category + PUC product family'))
+
+                        if puc_show_opts=='PUC general category + PUC product family':
+                            #Duplicates are dropped because the metric of interest is the number of 
+                            #distinct products, not the number of records 
+                            no_dups_pucs_available=pucs_available.drop_duplicates(subset=['Product Name', 
+                                                                                            'General Category',
+                                                                                            'Product Family',
+                                                                                            ], ignore_index=True)
+                            grouped_pucs = no_dups_pucs_available.groupby(by=['General Category', 'Product Family']
+                                                                            ).size(
+                                                                            ).reset_index(name='Number of product names')
+                            #String concatenation to get the combined names 
+                            grouped_pucs['PUC general category + PUC product family'] = grouped_pucs['General Category'] + " + " + grouped_pucs['Product Family']
+                            #Dropping empty cells
+                            grouped_pucs=grouped_pucs[grouped_pucs['Product Family']!='']
+                            grouped_pucs=grouped_pucs[grouped_pucs['General Category']!='']
+                            
                         
-                        #Dropping empty cells 
-                        grouped_pucs=grouped_pucs[grouped_pucs['Product Family']!='']
+                        if puc_show_opts=="General Category":
+                            #Duplicates are dropped because the metric of interest is the number of 
+                            #distinct products, not the number of records 
+                            no_dups_pucs_available=pucs_available.drop_duplicates(subset=['Product Name', 
+                                                                                            'General Category',
+                                                                                            ], ignore_index=True)
+                            grouped_pucs = no_dups_pucs_available.groupby(by=['General Category']
+                                                                            ).size(
+                                                                            ).reset_index(name='Number of product names')
+                            
+                            #Dropping empty cells 
+                            grouped_pucs=grouped_pucs[grouped_pucs['General Category']!='']
+
+                        if puc_show_opts=="Product Family":
+                            #Duplicates are dropped because the metric of interest is the number of 
+                            #distinct products, not the number of records 
+                            no_dups_pucs_available=pucs_available.drop_duplicates(subset=['Product Name', 
+                                                                                            'General Category',
+                                                                                            'Product Family',
+                                                                                            ], ignore_index=True)
+                            
+                            grouped_pucs = no_dups_pucs_available.groupby(by=['Product Family']
+                                                                            ).size(
+                                                                            ).reset_index(name='Number of product names')
+                            
+                            #Dropping empty cells 
+                            grouped_pucs=grouped_pucs[grouped_pucs['Product Family']!='']
+                        
+
+
+                        show_all_check = st.checkbox("Show all PUC categories")
+                        st.write("PUC categories represented by only a small number of products have been hidden. Click the checkbox above to show them") 
+                        if not show_all_check:
+                            grouped_pucs.sort_values(by='Number of product names', ascending=False, ignore_index=True, inplace=True)
+                            topval = grouped_pucs['Number of product names'][0]
+                            grouped_pucs = grouped_pucs[grouped_pucs['Number of product names']>(topval*.025)]                            
 
                         prods_per_catfam = alt.Chart(grouped_pucs).mark_bar().encode(
-                        x=alt.X('Number of product names:Q'),
-                        y=alt.Y('PUC general category + product family combination:N',  sort='-x',  
-                                                                                        axis=alt.Axis(title='PUC general category + product family combination',
-                                                                                        titleX=-370),
-                        )).configure_axis(labelLimit=1000)# When this method is used, the labels intrude up into the chart and replace it. 
-                        #Probably the height of the chart will need to be defined as well
-
-                        
+                            x=alt.X('Number of product names:Q'),
+                            y=alt.Y(puc_show_opts + ':N',  
+                                    sort='-x',  
+                                    axis=alt.Axis(title=puc_show_opts,
+                                    titleX=-350),
+                            )).configure_axis(labelLimit=1000) 
                         st.altair_chart(prods_per_catfam, use_container_width = True)
-                        st.markdown('##### Figure note: Number of products associated with each combination of PUC general category and product family')
+                       # st.markdown('##### Figure note: Number of products associated with each combination of PUC general category and product family')
                     except:
-                        st.write("No product use information is available")
+                        st.error("Error encountered when retrieving product use information")
 
             with st.container(border=True):
                 usis_of_interest = usis[usis['dtxsid']==structure_dtxsid]
@@ -347,7 +384,7 @@ if exst_chem_submitted:
                     usis_of_interest = usis_of_interest[usis_of_interest['exposure_level']!='0'] 
 
                     if not usis_of_interest.empty:
-                        st.markdown('#### Occupational inhalation exposure data on the entered substance, converted to units of mg/m^3')
+                        st.markdown('#### Occupational inhalation exposure data on the entered substance from the combined datasets CEHD, OIS and IMIS, converted to units of mg/m^3')
                         st.markdown('##### Data is separated by NAICS subsector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
                         box_and_whisker_mg_m3 = alt.Chart(usis_of_interest).mark_boxplot().encode(
                             x= alt.X('exposure_level:Q', 

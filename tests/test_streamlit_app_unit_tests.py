@@ -3,11 +3,9 @@ import sys
 import os
 from pathlib import Path
 import pandas as pd
-#print(os.getcwd())
 
-#current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append('../pages')
 
-sys.path.append(r'C:\Users\svanambe\OneDrive - Environmental Protection Agency (EPA)\Profile\Work\Projects\Exposure web app\Exposure_Read_Across\pages')
 from New_Chemical import analog_finder
 
 #These can be relative paths, because the interpreter is running the test from this directory 
@@ -22,9 +20,6 @@ four_nitroaniline_path = ("./4-Nitroaniline-NN.parq")
 one_chloro_four_nitrobenzene_df = pd.read_parquet(one_chloro_four_nitrobenzene_path)
 nitrofen_df = pd.read_parquet(nitrofen_path)
 four_nitroaniline_df = pd.read_parquet(four_nitroaniline_path)
-
-
-
 
 
 def test_analogues():
