@@ -4,8 +4,37 @@ from sklearn.neighbors import KNeighborsRegressor
 import pandas as pd
 from rdkit.Chem import rdFingerprintGenerator
 import numpy as np
+from ctxpy import Chemical
 
 class analog_operations:
+    #Converts measurements in mg/m^3 into units of ppm,
+    # assuming pressure of 1 atm and temperature of 25 C=77F
+    def ppm_to_mg (self, value, unit, mw)->float:
+
+        """
+        Converts multiple starting units to ppm
+
+        Args:
+            value (float or int): The numerical value of the air concentration of the chemical of interest.
+            unit (str): The unit of the measurement.
+            air_volume (float or int): The volume of air sampled
+            dtxsid (str): The DTXSID of the target substance.
+
+        Returns:
+            float: The air concentration.
+        """
+        value = float(value) 
+        
+        #Converts ppm measurements into mg/m^3 
+        if unit=='P':
+            #Conversion formula from https://www.cdc.gov/niosh/docs/2004-101/calc.html                       
+            mg_per_m3_value  = (value*mw)/(24.45)
+            return mg_per_m3_value  
+        elif unit=='M':
+            return value
+        else:
+            return '0'
+
 
     def generate_ecfp(self, smiles: str, morg_fing):# -> numpy.ndarray
         """
@@ -108,8 +137,36 @@ class analog_operations:
         cd_input_path = (script_location/"data"/"brotli_Consolidated_DSSTox_QSAR_smiles_only.parq")
         final_table=self.analog_finder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
         final_table.drop(columns=['index'], inplace=True )
-        final_table.rename(columns={'ID':'DTXSID', 'sim':'Similarity'}, inplace=True)
+        final_table.rename(columns={'ID':'DTXSID', 'sim':'Similarity'}, inplace=True)       
         with st.container(border=True):
+            st.markdown('##### Analogs are pulled from the set of substances in DSSTox that possess a QSAR-ready SMILES')
             st.dataframe(final_table)
+        return final_table
+    
+
+    def sum_fig(self, returned_table, usis_data):
+        chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
+        for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
+            expo_data = usis_data[usis_data['dtxsid']==dtxsid]
+            # Cleaning USIS for use in the analog-summarizing program
+            usis.drop('index', axis=1, inplace=True)
+            usis=usis[usis['exposure_level'] != '0']
+            usis=usis[usis['exposure_level'] != '0.0']
+            usis = usis[usis['measure_unit_id'].isin(['M', 'P'])]
+            deets = chem.details(by='dtxsid', word=dtxsid)   
+            molar_mass = deets['monoisotopicMass']    
+            usis['exposure_level'] = usis.apply(lambda x: self.ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
+
+            grouped_bysubs = expo_data.groupby('naics_2022_subsector_title')['exposure_level'].median()
+            st.write("HERE'S SOME INFO")
+            st.dataframe()
+
+
+
+
+
+
+
+
 
 

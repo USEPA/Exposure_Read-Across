@@ -51,6 +51,7 @@ def usis_info(structure_dtxsid, script_location):
     chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
     usis = import_usis(script_location)
 
+
     with st.container(border=True):
                 usis_of_interest = usis[usis['dtxsid']==structure_dtxsid]
 
@@ -93,6 +94,7 @@ def usis_info(structure_dtxsid, script_location):
                     #Dropping any rows where the ppm_to_mg function returns a value of zero, 
                     # as these cannot be placed on a log scale 
                     usis_of_interest = usis_of_interest[usis_of_interest['exposure_level']!='0'] 
+
                     naics_sector_or_sub = st.selectbox("Which level of NAICS results would you like to see?", ("NAICS Sector", "NAICS Subsector"))
                     if not usis_of_interest.empty:
                         st.markdown('#### Occupational inhalation exposure data on the entered substance from the combined datasets CEHD, OIS and IMIS, converted to units of mg/m^3')
@@ -108,13 +110,13 @@ def usis_info(structure_dtxsid, script_location):
                                                                             titleX=-370))).configure_axis(labelLimit=1000)                                                                 
                             
                         if naics_sector_or_sub == "NAICS Sector":
-                            usis_of_interest = usis_of_interest[usis_of_interest['naics_2022_sector_title'].notna()]
+                            usis_of_interest_nona = usis_of_interest[usis_of_interest['naics_2022_sector_title'].notna()]
                             st.markdown('##### Data is separated by NAICS subsector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
-                            box_and_whisker_mg_m3 = alt.Chart(usis_of_interest).mark_boxplot().encode(
+                            box_and_whisker_mg_m3 = alt.Chart(usis_of_interest_nona).mark_boxplot().encode(
                                 x= alt.X('exposure_level:Q', 
                                         scale=alt.Scale(type="log", 
-                                                        domain=[(usis_of_interest['exposure_level'].min())/10,
-                                                                (usis_of_interest['exposure_level'].max())*10 ])).title('Air concentration (ppm)'),
+                                                        domain=[(usis_of_interest_nona['exposure_level'].min())/10,
+                                                                (usis_of_interest_nona['exposure_level'].max())*10 ])).title('Air concentration (ppm)'),
                                 y= alt.Y('naics_2022_subsector_title:N', sort='-x',
                                                                             axis=alt.Axis(title='NAICS Subsector',
                                                                             titleX=-370))).configure_axis(labelLimit=1000)                                                                 
@@ -122,9 +124,14 @@ def usis_info(structure_dtxsid, script_location):
 
 
                         st.altair_chart(box_and_whisker_mg_m3, use_container_width = True)
-                       # st.markdown('##### Figure note: Chart type is box-and-whisker, but for some substances only outliers can be seen')
+                        # st.markdown('##### Figure note: Chart type is box-and-whisker, but for some substances only outliers can be seen')
                     else:   
                         st.markdown('### No occupational inhalation data available')
+    
+    return usis
+
+    
+
 
 
 

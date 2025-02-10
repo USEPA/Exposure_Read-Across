@@ -12,15 +12,22 @@ smiles_code = Streamlit_methods.first_section.ketcher_smiles()
 
 if smiles_code:
         
-        structure_dtxsid, has_dtxsid = Streamlit_methods.first_section.initial_details(smiles_code)            
+    structure_dtxsid, has_dtxsid = Streamlit_methods.first_section.initial_details(smiles_code)            
 
-        if has_dtxsid:
-            Streamlit_methods.cpdat_displays(structure_dtxsid)
-            
-            Streamlit_methods.usis_info(structure_dtxsid, script_location)
-            
-            Streamlit_methods.predicted_info(structure_dtxsid, script_location)
+    if has_dtxsid:
+        Streamlit_methods.cpdat_displays(structure_dtxsid)
+        usis_full = Streamlit_methods.usis_info(structure_dtxsid, script_location)
+        Streamlit_methods.predicted_info(structure_dtxsid, script_location)
 
-if smiles_code:   
     analog_instance = Streamlit_methods.analog_operations()
-    analog_instance.analog_retrieve(script_location, smiles_code)
+    analog_table = analog_instance.analog_retrieve(script_location, smiles_code)
+    if not usis_full.empty:
+        #st.write(usis_full.shape)
+        summary_figure = analog_instance.sum_fig(analog_table, usis_full)
+    else:
+        st.error('No data present for calculating exposure summary')
+
+
+
+
+

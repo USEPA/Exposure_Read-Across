@@ -5,7 +5,7 @@ from .chem_input import first_section
 from .cpdat_container import cpdat_displays
 from .usis_display import usis_info
 from .modeled_info import predicted_info
-from .analog_pull import analog_operations
+from .analog_methods import analog_operations
 
 #__all__ = ["ketcher_smiles", "intial_details"]
 
