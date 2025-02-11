@@ -5,14 +5,14 @@ import pandas as pd
 from rdkit.Chem import rdFingerprintGenerator
 import numpy as np
 from ctxpy import Chemical
+import altair as alt
 
 class analog_operations:
-    #Converts measurements in mg/m^3 into units of ppm,
-    # assuming pressure of 1 atm and temperature of 25 C=77F
+
     def ppm_to_mg (self, value, unit, mw)->float:
 
         """
-        Converts multiple starting units to ppm
+        Converts multiple starting units to ppm, assuming pressure of 1 atm and temperature of 25 C=77F
 
         Args:
             value (float or int): The numerical value of the air concentration of the chemical of interest.
@@ -146,8 +146,9 @@ class analog_operations:
 
     def sum_fig(self, returned_table, usis_data):
         chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
+        input_set=pd.DataFrame()
         for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
-            expo_data = usis_data[usis_data['dtxsid']==dtxsid]
+            usis = usis_data[usis_data['dtxsid']==dtxsid]
             # Cleaning USIS for use in the analog-summarizing program
             usis.drop('index', axis=1, inplace=True)
             usis=usis[usis['exposure_level'] != '0']
@@ -156,10 +157,41 @@ class analog_operations:
             deets = chem.details(by='dtxsid', word=dtxsid)   
             molar_mass = deets['monoisotopicMass']    
             usis['exposure_level'] = usis.apply(lambda x: self.ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
+            #Change the labeled unit type when the conversion is done
+            usis['measure_unit_id'] = 'M'
+            usis['measure_unit_name'] = 'Milligrams per cubic meter'
+            usis = usis[usis['exposure_level']!='0'] 
 
-            grouped_bysubs = expo_data.groupby('naics_2022_subsector_title')['exposure_level'].median()
-            st.write("HERE'S SOME INFO")
-            st.dataframe()
+            grouped_bysubs = usis.groupby('naics_2022_subsector_title')['exposure_level'].median().reset_index()
+            #grouped_bysubs.rename(columns={'inde'})
+
+            grouped_bysubs['substance_name'] = chem_name
+            grouped_bysubs ['Presence'] = '1'
+            if not grouped_bysubs.empty:
+                input_set = pd.concat([input_set, grouped_bysubs])
+            else:
+                dummy_dict = {'substance_name':[chem_name]}
+                dummy_df =pd.DataFrame(dummy_dict)
+                input_set = pd.concat([input_set, dummy_df])
+        #Remove this once I am done testing 
+        st.dataframe(input_set)
+
+        analog_htmp = alt.Chart(input_set).mark_rect().encode(
+             x = alt.X('substance_name:N', 
+              axis=alt.Axis(title='Substance Name'),
+              scale=alt.Scale(domain=list(input_set['substance_name'].unique()))), 
+            y = alt.Y('naics_2022_subsector_title:N',
+                       axis=alt.Axis(title = 'NAICS Subsector',
+                                     titleX=-300)),
+            color = 'Presence:Q',
+            tooltip = 'exposure_level:Q').configure_axis(labelLimit=1000)
+
+        st.altair_chart(analog_htmp)
+
+
+
+
+
 
 
 

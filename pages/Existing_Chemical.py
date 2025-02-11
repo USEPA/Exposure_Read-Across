@@ -7,12 +7,12 @@ import Streamlit_methods
 
 script_location = pathlib.Path(__file__).parent.parent.resolve()
 
-with st.container(border=True):
-        st.markdown('### The information presented here is useful for new chemical evaluation in two scenarios:' )
-        st.markdown('###     When the new substance of interest is in the DSSTox database, but '
-                    'not in the TSCA active inventory for the proposed use it is being evaluated for. ')
-        st.markdown('###     Or, when the substance of interest is not in the DSSTox database '
-                    'and information is desired on the structural analogues of the substance.')
+#with st.container(border=True):
+#        st.markdown('### The information presented here is useful for new chemical evaluation in two scenarios:' )
+ #       st.markdown('###     When the new substance of interest is in the DSSTox database, but '
+  #                  'not in the TSCA active inventory for the proposed use it is being evaluated for. ')
+   #     st.markdown('###     Or, when the substance of interest is not in the DSSTox database '
+    #                'and information is desired on the structural analogues of the substance.')
         
 #The streamlit_ketcher method does not run if the entry box is empty, 
 #so writing a way to catch when it is empty is not necessary
