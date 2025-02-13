@@ -20,12 +20,19 @@ if smiles_code:
         Streamlit_methods.predicted_info(structure_dtxsid, script_location)
 
     analog_instance = Streamlit_methods.analog_operations()
-    analog_table = analog_instance.analog_retrieve(script_location, smiles_code)
+    analog_table = analog_instance.analog_retrieve(script_location, smiles_code)                            
+
     if not usis_full.empty:
         #st.write(usis_full.shape)
-        summary_figure = analog_instance.sum_fig(analog_table, usis_full)
+        #summary_figure = analog_instance.usis_summary_fig(analog_table, usis_full)
+        new_fig = analog_instance.osha_cpdat_cdr(analog_table, usis_full, script_location)
+
+
     else:
         st.error('No data present for calculating exposure summary')
+
+
+
 
 
 

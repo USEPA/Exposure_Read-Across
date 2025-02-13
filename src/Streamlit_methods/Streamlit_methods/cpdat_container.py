@@ -63,7 +63,7 @@ def cpdat_displays(structure_dtxsid):
                         y='Function Category',
                         color=alt.Color('Reported Function', scale=alt.Scale(scheme='category20') )
                     ).configure_axis(labelLimit=1000)
-                    
+                    st.markdown('### Functional Use Information')
                     st.altair_chart(docs_per_function_cat, use_container_width = True)
                     st.markdown("##### Figure note: Collected documents containing entered substance grouped by reported function within a function category. " 
                                 "Only data with a reported function has been included. "
