@@ -128,18 +128,23 @@ class analog_operations:
 
         return NNi
 
-    def analog_retrieve(self, script_location, smiles_code): 
-        st.header("Structural Analogs")
-        #Commenting out while I work on the above 
+    def analog_retrieve(self, script_location, smiles_code):  
         
-        #First thing is to assign the Morgan fingerprints to the smiles code 
+        #Assign the Morgan fingerprints to the smiles code 
         FP_input_path = (script_location/"data"/"Morgan_fingerprints_of_DSSTox.feather")
         cd_input_path = (script_location/"data"/"brotli_Consolidated_DSSTox_QSAR_smiles_only.parq")
         final_table=self.analog_finder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
         final_table.drop(columns=['index'], inplace=True )
         final_table.rename(columns={'ID':'DTXSID', 'sim':'Similarity'}, inplace=True)       
         with st.container(border=True):
+            st.header("Structural Analogs")
             st.markdown('##### Analogs are pulled from the set of substances in DSSTox that possess a QSAR-ready SMILES')
+            analogs_csv = final_table.to_csv(index=False)
+            st.download_button(
+                                label="Download analog table",
+                                data=analogs_csv,
+                                file_name="analogs.csv"
+                               ) 
             st.dataframe(final_table)
         return final_table
     
@@ -157,13 +162,11 @@ class analog_operations:
             deets = chem.details(by='dtxsid', word=dtxsid)   
             molar_mass = deets['monoisotopicMass']    
             usis['exposure_level'] = usis.apply(lambda x: self.ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
-            #Change the labeled unit type when the conversion is done
             usis['measure_unit_id'] = 'M'
             usis['measure_unit_name'] = 'Milligrams per cubic meter'
             usis = usis[usis['exposure_level']!='0'] 
 
             grouped_bysubs = usis.groupby('naics_2022_subsector_title')['exposure_level'].median().reset_index()
-            #grouped_bysubs.rename(columns={'inde'})
 
             grouped_bysubs['substance_name'] = chem_name
             grouped_bysubs ['Presence'] = '1'
@@ -173,12 +176,10 @@ class analog_operations:
                 dummy_dict = {'substance_name':[chem_name]}
                 dummy_df =pd.DataFrame(dummy_dict)
                 input_set = pd.concat([input_set, dummy_df])
-        #Remove this once I am done testing 
-        #st.dataframe(input_set)
 
         analog_htmp = alt.Chart(input_set).mark_rect().encode(
              x = alt.X('substance_name:N', 
-              axis=alt.Axis(title='Substance Name'),
+              axis=alt.Axis(title=''),
               scale=alt.Scale(domain=list(input_set['substance_name'].unique()))), 
             y = alt.Y('naics_2022_subsector_title:N',
                        axis=alt.Axis(title = 'NAICS Subsector',
@@ -188,156 +189,189 @@ class analog_operations:
 
         st.altair_chart(analog_htmp)
    
-   
-    def osha_cpdat_cdr(self, returned_table, usis_data, run_from_location):
+   #Annotations and axis labels provide information 
+   # on meaning of variables and structure
+    def osha_cpdat_cdr_seem(self, returned_table, usis_data, run_from_location):
+       
         expo = Exposure(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
         input_set=pd.DataFrame()
 
-        for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
-            usis = usis_data[usis_data['dtxsid']==dtxsid]
-            num_usis_measurements = usis.shape[0]
-            usis_addition = pd.DataFrame({'Substance_Name':[chem_name],
-                                'Num_records':[num_usis_measurements],
-                                'record_type':['Record in USIS']
-                                })
-            input_set = pd.concat([input_set, usis_addition])
-
-            list_presence = expo.search_cpdat(vocab_name='lpk', dtxsid=dtxsid)
-            list_presence_df = pd.DataFrame(list_presence)
-            num_lpk_measurements = list_presence_df.shape[0]
-            lpk_addition = pd.DataFrame({'Substance_Name':[chem_name],
-                                'Num_records':[num_lpk_measurements],
-                                'record_type':['CPDat: List Presence Keywords']
-                                })
-            input_set = pd.concat([input_set, lpk_addition])
+        with st.container(border=True):
+            st.header("Summary of Structural Analog Data ")
+            st.markdown("#### Availability of data on analogs from CPDat and USIS.")
             
-            puc_presence = expo.search_cpdat(vocab_name='puc', dtxsid=dtxsid)
-            puc_presence_df = pd.DataFrame(puc_presence)
-            num_puc_measurements = puc_presence_df.shape[0]
-            puc_addition = pd.DataFrame({'Substance_Name':[chem_name],
-                                'Num_records':[num_puc_measurements],
-                                'record_type':['CPDat: PUCS']
-                                })
-            input_set = pd.concat([input_set, puc_addition])
+            #Iterates through the DataFrame of analogs, 
+            # adding data from each source on to a common dataframe 
+            for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
+                #USIS data
+                usis = usis_data[usis_data['dtxsid']==dtxsid]
+                num_usis_measurements = usis.shape[0]
+                usis_addition = pd.DataFrame({'Substance_Name':[chem_name],
+                                    'Num_records':[num_usis_measurements],
+                                    'record_type':['Record in USIS']
+                                    })
+                input_set = pd.concat([input_set, usis_addition])
+                #List presence data 
+                list_presence = expo.search_cpdat(vocab_name='lpk', dtxsid=dtxsid)
+                list_presence_df = pd.DataFrame(list_presence)
+                num_lpk_measurements = list_presence_df.shape[0]
+                lpk_addition = pd.DataFrame({'Substance_Name':[chem_name],
+                                    'Num_records':[num_lpk_measurements],
+                                    'record_type':['CPDat: List Presence Keywords']
+                                    })
+                input_set = pd.concat([input_set, lpk_addition])
+                #PUC data
+                puc_presence = expo.search_cpdat(vocab_name='puc', dtxsid=dtxsid)
+                puc_presence_df = pd.DataFrame(puc_presence)
+                num_puc_measurements = puc_presence_df.shape[0]
+                puc_addition = pd.DataFrame({'Substance_Name':[chem_name],
+                                    'Num_records':[num_puc_measurements],
+                                    'record_type':['CPDat: PUCS']
+                                    })
+                input_set = pd.concat([input_set, puc_addition])
+                #Function category data 
+                fc_presence = expo.search_cpdat(vocab_name='fc', dtxsid=dtxsid)
+                fc_presence_df = pd.DataFrame(fc_presence)
+                num_fc_measurements = fc_presence_df.shape[0]
+                fc_addition = pd.DataFrame({'Substance_Name':[chem_name],
+                                    'Num_records':[num_fc_measurements],
+                                    'record_type':['CPDat: Functional Use']
+                                    })
+                input_set = pd.concat([input_set, fc_addition])
 
-            fc_presence = expo.search_cpdat(vocab_name='fc', dtxsid=dtxsid)
-            fc_presence_df = pd.DataFrame(fc_presence)
-            num_fc_measurements = fc_presence_df.shape[0]
-            fc_addition = pd.DataFrame({'Substance_Name':[chem_name],
-                                'Num_records':[num_fc_measurements],
-                                'record_type':['CPDat: Functional Use']
-                                })
-            input_set = pd.concat([input_set, fc_addition])
-
-        cpdat_htmp = alt.Chart(input_set).mark_rect().encode(
-            x = alt.X('Substance_Name:N', 
-              axis=alt.Axis(title='Substance Name'),
-              scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))), 
-            y = alt.Y('record_type:N', title=''),
-            color = alt.Color('Num_records:Q').scale(scheme='turbo').title("Number of Records")).configure_axis(labelLimit=1000)
-            #tooltip = 'Num_records:Q'
-
-        st.altair_chart(cpdat_htmp)
-        ip_input = pd.DataFrame()
-        for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
-
-            input_pathways = expo.search_exposures(by='pathways', dtxsid=dtxsid)
-
-            if input_pathways.empty:
-
-                ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
-                                            'Exposure_Probabilities':[None, None, None, None]
-                                            })
-                
-            else:
-                diet_prob = input_pathways['probabilityDietary'].iloc[0]
-                res_prob = input_pathways['probabilityResidential'].iloc[0]
-                pest_prob = input_pathways['probabilityPesticde'].iloc[0]
-                industry_prob = input_pathways['probabilityIndustrial'].iloc[0]
-                
-                ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
-                                            'Exposure_Probabilities':[diet_prob, res_prob, pest_prob, industry_prob]
-                                            })
-                
-            ip_addition['substance_name'] = chem_name
-            
-            ip_input = pd.concat([ip_input, ip_addition])
-
-        ip_htmp = alt.Chart(ip_input).mark_rect().encode(
-            x = alt.X('substance_name:N', 
-                axis=alt.Axis(title='Substance Name'),
-                scale=alt.Scale(domain=list(ip_input['substance_name'].unique()))),
-            y = alt.Y('Exposure_Type:N', title=''),
-                color = alt.Color('Exposure_Probabilities:Q').scale(scheme='turbo').title("Exposure Predicted")).configure_axis(labelLimit=1000)
-
-        st.altair_chart(ip_htmp)
+            cpdat_htmp = alt.Chart(input_set).mark_rect().encode(
+                x = alt.X('Substance_Name:N', 
+                axis=alt.Axis(title=''),
+                scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))), 
+                y = alt.Y('record_type:N', title=''),
+                color = alt.Color('Num_records:Q').scale(scheme='turbo').title("Number of Records")
+                ).properties(width=660,height=330).configure_axis(labelLimit=1000)
+            st.altair_chart(cpdat_htmp)
 
 
-        nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
-        nhanes_inferences = pd.read_csv(nhanes_path)
+            ip_input = pd.DataFrame()
+            #Exposure pathway probabilities
+            for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
 
-        st.markdown('### Exposure doses are in mg/kg/day')
-        third_fig_input = pd.DataFrame()
+                input_pathways = expo.search_exposures(by='pathways', dtxsid=dtxsid)
 
-        for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
-            
-            nhanes_presence = nhanes_inferences[nhanes_inferences['dsstox_substance_id'] == dtxsid]
-            
-            #Cannot make whole dataframe at once with all inputs, 
-            # because each input must be filtered independently depending on whether it contains information  
+                if input_pathways.empty:
 
-            if not nhanes_presence.empty:
+                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
+                                                'Exposure_Probabilities':[None, None, None, None]
+                                                })
                     
-                nhanes_info = nhanes_presence['mgpkgpday'].iloc[0]
-                nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"], 
-                                          'substance_name':[chem_name],
-                                            "exposure_dose":[nhanes_info]})
+                else:
+                    diet_prob = input_pathways['probabilityDietary'].iloc[0]
+                    res_prob = input_pathways['probabilityResidential'].iloc[0]
+                    pest_prob = input_pathways['probabilityPesticde'].iloc[0]
+                    industry_prob = input_pathways['probabilityIndustrial'].iloc[0]
+                    
+                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
+                                                'Exposure_Probabilities':[diet_prob, res_prob, pest_prob, industry_prob]
+                                                })
+                    
+                ip_addition['substance_name'] = chem_name
                 
-            else:
-                nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"],
-                                          'substance_name':[chem_name],
-                                          "exposure_dose":[None]})
+                ip_input = pd.concat([ip_input, ip_addition])
+
+            ip_htmp = alt.Chart(ip_input).mark_rect().encode(
+                x = alt.X('substance_name:N', 
+                    axis=alt.Axis(title=''),
+                    scale=alt.Scale(domain=list(ip_input['substance_name'].unique()))),
+                y = alt.Y('Exposure_Type:N', title=''),
+                    color = alt.Color('Exposure_Probabilities:Q').scale(scheme='turbo')
+                    .title("Exposure Predicted")).properties(width=660,height=330).configure_axis(labelLimit=1000)
+            
+            st.markdown('#### Estimated probability of exposure through common pathways')
+            st.altair_chart(ip_htmp)
+
+
+            nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
+            nhanes_inferences = pd.read_csv(nhanes_path)
+
+
+            
+            third_fig_input = pd.DataFrame()
+            #Model prediction data
+            for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
                 
-            third_fig_input= pd.concat([third_fig_input, nhanes_df])
-
-
-            seem = pd.DataFrame(expo.search_exposures(by="seem", dtxsid=dtxsid))
-
-            if not seem.empty:
-                consensus = seem[seem['predictor']=='SEEM3 Consensus']
-                pred_exp = consensus['median'][0]
-
-                sheds_direct = seem[seem['predictor']=='SHEDS.Direct']
-                pred_shed_dir = sheds_direct['median'][0]
-
-                sheds_indirect = seem[seem['predictor']=='SHEDS.Indirect']
-                pred_shed_indir = sheds_indirect['median'][0]
-
-                raidar_farfield = seem[seem['predictor']=='RAIDAR']
-                raidar_far_pred = raidar_farfield['median'][0]
-
-                raidar_ice = seem[seem['predictor']=='RAIDAR.ICE']
-                raidar_ice_pred = raidar_ice['median'][0]
-
-                seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],                                        'substance_name':[chem_name, chem_name, chem_name, chem_name, chem_name],
-                                        "exposure_dose":[pred_exp, pred_shed_dir, pred_shed_indir, raidar_far_pred, raidar_ice_pred]})
-            else:
-                #Update this once all the SEEM is written 
-                seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],
-                                        'substance_name':[chem_name, chem_name, chem_name, chem_name, chem_name],
-                                        "exposure_dose":[None, None, None, None, None,]})
+                nhanes_presence = nhanes_inferences[nhanes_inferences['dsstox_substance_id'] == dtxsid]
                 
-        third_fig_input= pd.concat[third_fig_input, seem_df]
+                #Cannot make whole dataframe at once with all inputs, 
+                # because each input must be filtered independently depending on whether it contains information  
 
-        modeled_htmp = alt.Chart(third_fig_input).mark_rect().encode(
-        x = alt.X('substance_name:N', 
-            axis=alt.Axis(title='Substance Name'),
-            scale=alt.Scale(domain=list(third_fig_input['substance_name'].unique()))),
-        y = alt.Y('database:N', title=''),
-            color = alt.Color('exposure_dose:Q').scale(scheme='turbo').title("Exposure dose Predicted")).configure_axis(labelLimit=1000)
+                if not nhanes_presence.empty:
+                        
+                    nhanes_info = nhanes_presence['mgpkgpday'].iloc[0]
+                    nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"], 
+                                            'substance_name':[chem_name],
+                                                "exposure_dose":[nhanes_info]})
+                    
+                else:
+                    nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"],
+                                            'substance_name':[chem_name],
+                                            "exposure_dose":[None]})
+                    
+                third_fig_input= pd.concat([third_fig_input, nhanes_df])
 
-        st.altair_chart(modeled_htmp)
-        
+
+                seem = pd.DataFrame(expo.search_exposures(by="seem", dtxsid=dtxsid))
+
+                if not seem.empty:
+                    consensus = seem[seem['predictor']=='SEEM3 Consensus']
+                    if not consensus.empty:
+                        pred_exp = consensus['median'].iloc[0]
+                    else:
+                        pred_exp = None
+
+                    sheds_direct = seem[seem['predictor']=='SHEDS.Direct']
+                    if not sheds_direct.empty:
+                        pred_shed_dir = sheds_direct['median'].iloc[0]
+                    else:
+                        pred_shed_dir = None
+
+                    sheds_indirect = seem[seem['predictor']=='SHEDS.Indirect']
+                    if not sheds_indirect.empty:
+                        pred_shed_indir = sheds_indirect['median'].iloc[0]
+                    else:
+                        pred_shed_indir = None
+
+                    raidar_farfield = seem[seem['predictor']=='RAIDAR']
+                    if not raidar_farfield.empty:
+                        raidar_far_pred = raidar_farfield['median'].iloc[0]
+                    else:
+                        raidar_far_pred = None
+
+
+                    raidar_ice = seem[seem['predictor']=='RAIDAR.ICE']
+                    if not raidar_ice.empty:
+                        raidar_ice_pred = raidar_ice['median'].iloc[0]
+                    else:
+                        raidar_ice_pred = None
+
+                    seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],                                        
+                                            'substance_name':[chem_name, chem_name, chem_name, chem_name, chem_name],
+                                            "exposure_dose":[pred_exp, pred_shed_dir, pred_shed_indir, raidar_far_pred, raidar_ice_pred]})
+                else:
+
+                    seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],
+                                            'substance_name':[chem_name, chem_name, chem_name, chem_name, chem_name],
+                                            "exposure_dose":[None, None, None, None, None,]})
+                    
+                third_fig_input= pd.concat([third_fig_input, seem_df])
+
+            modeled_htmp = alt.Chart(third_fig_input).mark_rect().encode(
+            x = alt.X('substance_name:N', 
+                axis=alt.Axis(title=''),
+                scale=alt.Scale(domain=list(third_fig_input['substance_name'].unique()))),
+            y = alt.Y('database:N', title=''),
+                color = alt.Color('exposure_dose:Q').scale(scheme='turbo').title("Exposure Dose Predicted (mg/kg/day)")
+                ).properties(width=660,height=330).configure_axis(labelLimit=1000)
+
+            st.markdown('####  Predicted exposure doses in units of mg/kg/day')
+            st.altair_chart(modeled_htmp)
+            
 
 
 
