@@ -7,7 +7,7 @@ st.markdown('### Choose the "New Chemical" page in the right-hand bar to see'
             ' the information provided on the "Existing Chemical" page, as well as a summary of the information available on analogs of your chemical of interest.')
 st.markdown('#### On either page, draw the structure of your chemical of interest and click "apply" to retrieve information on the chemical.')
 
-st.markdown('#### The pages contain annotations by each data-source that suggest potential uses for the information displayed.')
+st.markdown('#### These pages contain annotations above each data-source that suggest potential uses for the information displayed.')
 
 
 

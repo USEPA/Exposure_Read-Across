@@ -9,7 +9,7 @@ class first_section:
     def ketcher_smiles():
 
         with st.container(border=True):
-            st.markdown("## Existing Chemical Input")
+            st.markdown("## Chemical Input")
             st.markdown("### Structure")
             st.markdown("Draw the structure in the provided space below and then click the "
                         "`Apply` button to retrieve information on the chemical.")

@@ -244,30 +244,39 @@ class analog_operations:
                 axis=alt.Axis(title=''),
                 scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))), 
                 y = alt.Y('record_type:N', title=''),
-                color = alt.Color('Num_records:Q').scale(scheme='turbo').title("Number of Records")
-                ).properties(width=660,height=330).configure_axis(labelLimit=1000)
+                color = alt.Color('Num_records:Q').scale(scheme='plasma').title("Number of Records")
+                ).configure_axis(labelLimit=1000)
+            #.properties(width=660,height=330)
             st.altair_chart(cpdat_htmp)
 
 
-            ip_input = pd.DataFrame()
             #Exposure pathway probabilities
+            ip_input = pd.DataFrame()
             for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
 
                 input_pathways = expo.search_exposures(by='pathways', dtxsid=dtxsid)
 
                 if input_pathways.empty:
 
-                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
-                                                'Exposure_Probabilities':[None, None, None, None]
+                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Probability:', 'Residential Exposure Probability:', 'Pesticide Exposure Probability:', 'Industrial Exposure Probability:' ],
+                                                'Exposure_Probabilities':[None, None, None, None],
                                                 })
                     
                 else:
                     diet_prob = input_pathways['probabilityDietary'].iloc[0]
+                    if diet_prob < 0.5:
+                        diet_prob = None
                     res_prob = input_pathways['probabilityResidential'].iloc[0]
+                    if res_prob < 0.5:
+                        res_prob = None
                     pest_prob = input_pathways['probabilityPesticde'].iloc[0]
+                    if pest_prob < 0.5:
+                        pest_prob = None
                     industry_prob = input_pathways['probabilityIndustrial'].iloc[0]
-                    
-                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Predicted:', 'Residential Exposure Predicted:', 'Pesticide Exposure Predicted:', 'Industrial Exposure Predicted:' ],
+                    if industry_prob < 0.5:
+                        industry_prob = None
+
+                    ip_addition = pd.DataFrame({'Exposure_Type': ['Dietary Exposure Probability:', 'Residential Exposure Probability:', 'Pesticide Exposure Probability:', 'Industrial Exposure Probability:' ],
                                                 'Exposure_Probabilities':[diet_prob, res_prob, pest_prob, industry_prob]
                                                 })
                     
@@ -280,8 +289,10 @@ class analog_operations:
                     axis=alt.Axis(title=''),
                     scale=alt.Scale(domain=list(ip_input['substance_name'].unique()))),
                 y = alt.Y('Exposure_Type:N', title=''),
-                    color = alt.Color('Exposure_Probabilities:Q').scale(scheme='turbo')
-                    .title("Exposure Predicted")).properties(width=660,height=330).configure_axis(labelLimit=1000)
+                color = alt.Color('Exposure_Probabilities:Q').scale(scheme='plasma')
+                    .title("Exposure Probability")
+                    ).configure_axis(labelLimit=1000)
+            #.properties(width=660,height=330)
             
             st.markdown('#### Estimated probability of exposure through common pathways')
             st.altair_chart(ip_htmp)
@@ -366,8 +377,10 @@ class analog_operations:
                 axis=alt.Axis(title=''),
                 scale=alt.Scale(domain=list(third_fig_input['substance_name'].unique()))),
             y = alt.Y('database:N', title=''),
-                color = alt.Color('exposure_dose:Q').scale(scheme='turbo').title("Exposure Dose Predicted (mg/kg/day)")
-                ).properties(width=660,height=330).configure_axis(labelLimit=1000)
+            color = alt.Color('exposure_dose:Q')
+                .title(['Exposure Dose Predicted', '(mg/kg/day)'])
+                ).configure_axis(labelLimit=1000)
+            #.properties(width=660,height=330), type = 'log', scheme='plasma',.scale(type="log")
 
             st.markdown('####  Predicted exposure doses in units of mg/kg/day')
             st.altair_chart(modeled_htmp)

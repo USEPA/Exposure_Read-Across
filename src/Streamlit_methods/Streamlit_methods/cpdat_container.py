@@ -123,7 +123,7 @@ def cpdat_displays(structure_dtxsid):
                                     file_name="functional_use_data.csv"
                                     )
                         pucs_available.drop(columns=['id','dtxsid','docid',], inplace=True)
-                        puc_show_opts = st.selectbox("Which level of PUC results would you like to see?", ("General Category", "Product Family", 'PUC general category + PUC product family'))
+                        puc_show_opts = st.selectbox("Which level of PUC results would you like to see?", ("General Category", 'PUC general category + PUC product family'))
 
                         if puc_show_opts=='PUC general category + PUC product family':
                             #Duplicates are dropped because the metric of interest is the number of 
@@ -154,21 +154,6 @@ def cpdat_displays(structure_dtxsid):
                             
                             #Dropping empty cells 
                             grouped_pucs=grouped_pucs[grouped_pucs['General Category']!='']
-
-                        if puc_show_opts=="Product Family":
-                            #Duplicates are dropped because the metric of interest is the number of 
-                            #distinct products, not the number of records 
-                            no_dups_pucs_available=pucs_available.drop_duplicates(subset=['Product Name', 
-                                                                                            'General Category',
-                                                                                            'Product Family',
-                                                                                            ], ignore_index=True)
-                            
-                            grouped_pucs = no_dups_pucs_available.groupby(by=['Product Family']
-                                                                            ).size(
-                                                                            ).reset_index(name='Number of product names')
-                            
-                            #Dropping empty cells 
-                            grouped_pucs=grouped_pucs[grouped_pucs['Product Family']!='']
                         
 
 

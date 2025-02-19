@@ -25,7 +25,7 @@ if smiles_code:
     if not usis_full.empty:
         #st.write(usis_full.shape)
         #summary_figure = analog_instance.usis_summary_fig(analog_table, usis_full)
-        new_fig = analog_instance.osha_cpdat_cdr(analog_table, usis_full, script_location)
+        new_fig = analog_instance.osha_cpdat_cdr_seem(analog_table, usis_full, script_location)
 
 
     else:
