@@ -6,6 +6,7 @@ from rdkit.Chem import rdFingerprintGenerator
 import numpy as np
 from ctxpy import Chemical, Exposure
 import altair as alt
+import math
 
 class analog_operations:
 
@@ -188,6 +189,26 @@ class analog_operations:
             tooltip = 'exposure_level:Q').configure_axis(labelLimit=1000)
 
         st.altair_chart(analog_htmp)
+
+    def modeled_fig_input(self, seem_return, predictor_name):
+        predictor_return=seem_return[seem_return['predictor']==predictor_name]
+        if not predictor_return.empty:
+            pred_exp = predictor_return['median'].iloc[0]
+            if pred_exp > 0:
+                return math.log(pred_exp, 10)
+            else:
+                return None
+        else:
+            return None
+
+    def cdr_input(self, cdr_set, returned_set, dsstoxid, substance_name, data_title):
+        cdr_set = cdr_set[cdr_set['dtxsid']==dsstoxid]
+        num_docs = cdr_set.size[0]
+        cdr_addition = pd.DataFrame({'Substance_Name':[substance_name],
+                                    'Num_records':[num_docs],
+                                    'record_type':[data_title]
+                                    })
+        
    
    #Annotations and axis labels provide information 
    # on meaning of variables and structure
@@ -196,9 +217,13 @@ class analog_operations:
         expo = Exposure(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
         input_set=pd.DataFrame()
 
+        cdr_ccu = pd.read_parquet(run_from_location/'data'/'cdr_ccu_plus_dtxsids.parq')
+        cdr_ipu = pd.read_parquet(run_from_location/'data'/'cdr_ipu_plus_dtxsids.parq')
+        cdr_mi = pd.read_parquet(run_from_location/'data'/'cdr_mi_plus_dtxsids.parq')
+        
         with st.container(border=True):
             st.header("Summary of Structural Analog Data ")
-            st.markdown("#### Availability of data on analogs from CPDat and USIS.")
+            st.markdown("#### Availability of data on analogs from CPDat, CDR, and USIS.")
             
             #Iterates through the DataFrame of analogs, 
             # adding data from each source on to a common dataframe 
@@ -229,6 +254,7 @@ class analog_operations:
                                     'record_type':['CPDat: PUCS']
                                     })
                 input_set = pd.concat([input_set, puc_addition])
+
                 #Function category data 
                 fc_presence = expo.search_cpdat(vocab_name='fc', dtxsid=dtxsid)
                 fc_presence_df = pd.DataFrame(fc_presence)
@@ -238,6 +264,10 @@ class analog_operations:
                                     'record_type':['CPDat: Functional Use']
                                     })
                 input_set = pd.concat([input_set, fc_addition])
+
+                #CDR-CCU data 
+                input_set = self.cdr_input(cdr_ccu, input_set, dtxsid, chem_name, 'CDR: Consumer and Commercial')
+
 
             cpdat_htmp = alt.Chart(input_set).mark_rect().encode(
                 x = alt.X('Substance_Name:N', 
@@ -297,16 +327,12 @@ class analog_operations:
             st.markdown('#### Estimated probability of exposure through common pathways')
             st.altair_chart(ip_htmp)
 
-
             nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
-            nhanes_inferences = pd.read_csv(nhanes_path)
-
-
-            
+            nhanes_inferences = pd.read_csv(nhanes_path)            
             third_fig_input = pd.DataFrame()
             #Model prediction data
             for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
-                
+
                 nhanes_presence = nhanes_inferences[nhanes_inferences['dsstox_substance_id'] == dtxsid]
                 
                 #Cannot make whole dataframe at once with all inputs, 
@@ -315,9 +341,10 @@ class analog_operations:
                 if not nhanes_presence.empty:
                         
                     nhanes_info = nhanes_presence['mgpkgpday'].iloc[0]
+                    nhanes_info_log = math.log(nhanes_info, 10)
                     nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"], 
                                             'substance_name':[chem_name],
-                                                "exposure_dose":[nhanes_info]})
+                                                "exposure_dose":[nhanes_info_log]})
                     
                 else:
                     nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"],
@@ -330,40 +357,15 @@ class analog_operations:
                 seem = pd.DataFrame(expo.search_exposures(by="seem", dtxsid=dtxsid))
 
                 if not seem.empty:
-                    consensus = seem[seem['predictor']=='SEEM3 Consensus']
-                    if not consensus.empty:
-                        pred_exp = consensus['median'].iloc[0]
-                    else:
-                        pred_exp = None
-
-                    sheds_direct = seem[seem['predictor']=='SHEDS.Direct']
-                    if not sheds_direct.empty:
-                        pred_shed_dir = sheds_direct['median'].iloc[0]
-                    else:
-                        pred_shed_dir = None
-
-                    sheds_indirect = seem[seem['predictor']=='SHEDS.Indirect']
-                    if not sheds_indirect.empty:
-                        pred_shed_indir = sheds_indirect['median'].iloc[0]
-                    else:
-                        pred_shed_indir = None
-
-                    raidar_farfield = seem[seem['predictor']=='RAIDAR']
-                    if not raidar_farfield.empty:
-                        raidar_far_pred = raidar_farfield['median'].iloc[0]
-                    else:
-                        raidar_far_pred = None
-
-
-                    raidar_ice = seem[seem['predictor']=='RAIDAR.ICE']
-                    if not raidar_ice.empty:
-                        raidar_ice_pred = raidar_ice['median'].iloc[0]
-                    else:
-                        raidar_ice_pred = None
+                    pred_exp_log = self.modeled_fig_input(seem, 'SEEM3 Consensus', )
+                    pred_shed_dir_log = self.modeled_fig_input(seem, 'SHEDS.Direct')
+                    pred_shed_indir_log = self.modeled_fig_input(seem, 'SHEDS.Indirect')
+                    raidar_far_pred_log = self.modeled_fig_input(seem, 'RAIDAR')
+                    raidar_ice_pred_log = self.modeled_fig_input(seem, 'RAIDAR.ICE')
 
                     seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],                                        
                                             'substance_name':[chem_name, chem_name, chem_name, chem_name, chem_name],
-                                            "exposure_dose":[pred_exp, pred_shed_dir, pred_shed_indir, raidar_far_pred, raidar_ice_pred]})
+                                            "exposure_dose":[pred_exp_log, pred_shed_dir_log, pred_shed_indir_log, raidar_far_pred_log, raidar_ice_pred_log]})
                 else:
 
                     seem_df = pd.DataFrame({'database':["SEEM3 consensus", "SHEDS-HT direct", "SHEDS-HT direct", "RAIDAR Far-Field", "RAIDAR Indoor and Consumer" ],
@@ -377,8 +379,8 @@ class analog_operations:
                 axis=alt.Axis(title=''),
                 scale=alt.Scale(domain=list(third_fig_input['substance_name'].unique()))),
             y = alt.Y('database:N', title=''),
-            color = alt.Color('exposure_dose:Q')
-                .title(['Exposure Dose Predicted', '(mg/kg/day)'])
+            color = alt.Color('exposure_dose:Q').scale(type="linear")
+                .title(['Base-10 Log of','Exposure Dose.',  'Originaly predicted in units of', '(mg/kg/day)'])
                 ).configure_axis(labelLimit=1000)
             #.properties(width=660,height=330), type = 'log', scheme='plasma',.scale(type="log")
 
