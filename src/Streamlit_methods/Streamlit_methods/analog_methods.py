@@ -8,7 +8,7 @@ from ctxpy import Chemical, Exposure
 import altair as alt
 import math
 
-class analog_operations:
+class analog_class:
 
     def ppm_to_mg (self, value, unit, mw)->float:
 
