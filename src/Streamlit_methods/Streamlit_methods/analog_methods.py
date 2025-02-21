@@ -201,14 +201,19 @@ class analog_operations:
         else:
             return None
 
-    def cdr_input(self, cdr_set, returned_set, dsstoxid, substance_name, data_title):
+    def cdr_input(self, cdr_set, main_set, dsstoxid, substance_name, data_title):
+       
         cdr_set = cdr_set[cdr_set['dtxsid']==dsstoxid]
-        num_docs = cdr_set.size[0]
+        num_docs = cdr_set.shape[0]
+        if num_docs==0:
+            num_docs = None
         cdr_addition = pd.DataFrame({'Substance_Name':[substance_name],
                                     'Num_records':[num_docs],
                                     'record_type':[data_title]
                                     })
         
+        returned_set = pd.concat([main_set, cdr_addition])
+        return returned_set
    
    #Annotations and axis labels provide information 
    # on meaning of variables and structure
@@ -231,24 +236,35 @@ class analog_operations:
                 #USIS data
                 usis = usis_data[usis_data['dtxsid']==dtxsid]
                 num_usis_measurements = usis.shape[0]
+                
+                if num_usis_measurements == 0:
+                    num_usis_measurements=None
+
                 usis_addition = pd.DataFrame({'Substance_Name':[chem_name],
                                     'Num_records':[num_usis_measurements],
                                     'record_type':['Record in USIS']
                                     })
                 input_set = pd.concat([input_set, usis_addition])
+                
                 #List presence data 
                 list_presence = expo.search_cpdat(vocab_name='lpk', dtxsid=dtxsid)
                 list_presence_df = pd.DataFrame(list_presence)
                 num_lpk_measurements = list_presence_df.shape[0]
+                if num_lpk_measurements==0:
+                    num_lpk_measurements=None
+
                 lpk_addition = pd.DataFrame({'Substance_Name':[chem_name],
                                     'Num_records':[num_lpk_measurements],
                                     'record_type':['CPDat: List Presence Keywords']
                                     })
                 input_set = pd.concat([input_set, lpk_addition])
+
                 #PUC data
                 puc_presence = expo.search_cpdat(vocab_name='puc', dtxsid=dtxsid)
                 puc_presence_df = pd.DataFrame(puc_presence)
                 num_puc_measurements = puc_presence_df.shape[0]
+                if num_puc_measurements==0:
+                    num_puc_measurements=None
                 puc_addition = pd.DataFrame({'Substance_Name':[chem_name],
                                     'Num_records':[num_puc_measurements],
                                     'record_type':['CPDat: PUCS']
@@ -259,6 +275,8 @@ class analog_operations:
                 fc_presence = expo.search_cpdat(vocab_name='fc', dtxsid=dtxsid)
                 fc_presence_df = pd.DataFrame(fc_presence)
                 num_fc_measurements = fc_presence_df.shape[0]
+                if num_fc_measurements == 0:
+                    num_fc_measurements = None
                 fc_addition = pd.DataFrame({'Substance_Name':[chem_name],
                                     'Num_records':[num_fc_measurements],
                                     'record_type':['CPDat: Functional Use']
@@ -267,7 +285,10 @@ class analog_operations:
 
                 #CDR-CCU data 
                 input_set = self.cdr_input(cdr_ccu, input_set, dtxsid, chem_name, 'CDR: Consumer and Commercial')
-
+                #CDR-IPU data
+                input_set = self.cdr_input(cdr_ipu, input_set, dtxsid, chem_name, 'CDR: Industrial Processing and Use')
+                #CDR-MI data 
+                input_set = self.cdr_input(cdr_mi, input_set, dtxsid, chem_name, 'CDR: Manufacture-Import')
 
             cpdat_htmp = alt.Chart(input_set).mark_rect().encode(
                 x = alt.X('Substance_Name:N', 
@@ -325,6 +346,7 @@ class analog_operations:
             #.properties(width=660,height=330)
             
             st.markdown('#### Estimated probability of exposure through common pathways')
+            st.markdown('##### Estimates of probability below 0.5 have been made blank ')
             st.altair_chart(ip_htmp)
 
             nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
