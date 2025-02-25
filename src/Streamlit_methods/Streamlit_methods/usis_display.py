@@ -112,15 +112,16 @@ def usis_info(structure_dtxsid, script_location):
                             
                         if naics_sector_or_sub == "NAICS Sector":
                             usis_of_interest_nona = usis_of_interest[usis_of_interest['naics_2022_sector_title'].notna()]
-                            st.markdown('##### Data is separated by NAICS subsector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
+                            st.markdown('##### Data is separated by NAICS sector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
                             box_and_whisker_mg_m3 = alt.Chart(usis_of_interest_nona).mark_boxplot().encode(
                                 x= alt.X('exposure_level:Q', 
                                         scale=alt.Scale(type="log", 
                                                         domain=[(usis_of_interest_nona['exposure_level'].min())/10,
                                                                 (usis_of_interest_nona['exposure_level'].max())*10 ])).title('Air concentration (ppm)'),
-                                y= alt.Y('naics_2022_subsector_title:N', sort='-x',
-                                                                            axis=alt.Axis(title='NAICS Subsector',
-                                                                            titleX=-370))).configure_axis(labelLimit=1000)                                                                 
+                                y= alt.Y('naics_2022_sector_title:N', 
+                                        sort='-x',
+                                        axis=alt.Axis(title='NAICS sector',
+                                        titleX=-370))).configure_axis(labelLimit=1000)                                                                 
                             
 
 
