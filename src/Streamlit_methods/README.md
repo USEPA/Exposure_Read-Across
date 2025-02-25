@@ -14,13 +14,11 @@ git clone https://github.com/USEPA/Exposure_Read-Across.git
 
 Assuming you have pip already installed, install the required packages with `pip install -r requirements.txt`
 
+For information on how to obtain a CCTE API key for use in the required ctx-python package see [https://api-ccte.epa.gov/docs/](https://api-ccte.epa.gov/docs/) 
+
 ## Running the app
 
 Navigate to the cloned `Exposure_Read-Across` folder in your preferred command-line interface and then run the line `streamlit run webpage_welcome.py`. This will open up the app in your browser with all three pages available. 
-
-## Running Unit Tests
-
-Navigate to the cloned `Exposure_Read-Across\tests` folder and then run the command `pytest`
 
 ## Credits
 
