@@ -28,8 +28,8 @@ if smiles_code or user_input:
         #summary_figure = analog_instance.usis_summary_fig(analog_table, usis_full)
         new_fig = analog_instance.osha_cpdat_cdr_seem(analog_table, usis_full, script_location)
 
-else:
-    st.error('No data present for calculating exposure summary')
+#else:
+#    st.error('No data present for calculating exposure summary')
 
 
 

@@ -17,18 +17,17 @@ script_location = pathlib.Path(__file__).parent.parent.resolve()
 #The streamlit_ketcher method does not run if the entry box is empty, 
 #so writing a way to catch when it is empty is not necessary
 
-smiles_code = Streamlit_methods.first_section.ketcher_smiles()
+smiles_code, user_input = Streamlit_methods.first_section.substance_input()
 
-if smiles_code:
+
+if smiles_code or user_input:
         
-        structure_dtxsid, has_dtxsid = Streamlit_methods.first_section.initial_details(smiles_code)            
+    target_dtxsid, has_dtxsid, ctxpy_smiles = Streamlit_methods.first_section.initial_details(smiles_code, user_input)            
 
-        if has_dtxsid:
-            Streamlit_methods.cpdat_displays(structure_dtxsid)
-            
-            Streamlit_methods.usis_info(structure_dtxsid, script_location)
-            
-            Streamlit_methods.predicted_info(structure_dtxsid, script_location)
+    if has_dtxsid:
+        Streamlit_methods.cpdat_displays(target_dtxsid)
+        usis_full = Streamlit_methods.usis_info(target_dtxsid, script_location)
+        Streamlit_methods.predicted_info(target_dtxsid, script_location)
                                         
 
            
