@@ -78,8 +78,7 @@ def predicted_info(structure_dtxsid, script_location):
             #Where: 
             ED = 250 #integer, days exposed per year; 250 is all the weekdays in a year minus two weeks of vacation
             Cm = top_av #None or float,  mass concentration of chemical in air (mg/m^3)
-            b = 0.636 # volumetric inhalation rate; 0 <= b <=7.9 
-            #(the default value suggested by CLOET is 1.25 m^3/hr, but the ATSDR document "Guidance for Inhalation Exposures" suggests 0.0106 m^3/min (0.636 m^3/hr))
+            b = 1.25 # volumetric inhalation rate; 0 <= b <=7.9. The default value suggested by CLOET is 1.25 m^3/hr
             #Document link: https://www.atsdr.cdc.gov/pha-guidance/resources/ATSDR-EDG-Inhalation-508.pdf
             h = 8.5 #: daily exposure duration (hrs/day)
             EY = 40 #integer, years of occupational exposure; 0 <= EY (default: 40 years)
