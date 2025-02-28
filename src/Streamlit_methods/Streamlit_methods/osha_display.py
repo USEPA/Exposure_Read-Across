@@ -46,14 +46,14 @@ def ppm_to_mg (value, unit, mw)->float:
         return '0'
 
 
-def usis_info(structure_dtxsid, script_location):
+def osha_info(structure_dtxsid, script_location):
 
-    chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
+    chem = Chemical()
     usis = import_usis(script_location)
 
 
     with st.container(border=True):
-                usis_of_interest = usis[usis['dtxsid']==structure_dtxsid]
+                usis_of_interest = usis[usis['dtxsid']==structure_dtxsid].copy()
 
                 if usis_of_interest.empty:
                     st.markdown('### No exposure data available')
@@ -79,7 +79,7 @@ def usis_info(structure_dtxsid, script_location):
                     usis_of_interest = usis_of_interest[usis_of_interest['measure_unit_id'].isin(['M', 'P'])]
 
                     deets = chem.details(by='dtxsid', word=structure_dtxsid)   
-                    molar_mass = deets['monoisotopicMass']    
+                    molar_mass = deets['averageMass']    
                     usis_of_interest['exposure_level'] = usis_of_interest.apply(lambda x: ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
                     
                     #Change the labeled unit type when the conversion is done

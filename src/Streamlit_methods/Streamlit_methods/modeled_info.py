@@ -50,7 +50,7 @@ def predicted_info(structure_dtxsid, script_location):
             #Output from Jeff's model 
         st.markdown('### Predicted Occupational Exposure')
         st.markdown('#### Paper describing model available [here](https://pubs.acs.org/doi/10.1021/acs.est.2c08234):')
-        minucci_portion = minucci[minucci['dtxsid']==structure_dtxsid]                  
+        minucci_portion = minucci[minucci['dtxsid']==structure_dtxsid].copy()                
         # and then display them in the SEEM3 model chart
 
         if minucci_portion.empty:

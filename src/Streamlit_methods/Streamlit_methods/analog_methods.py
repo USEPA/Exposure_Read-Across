@@ -151,7 +151,7 @@ class analog_class:
     
 
     def usis_summary_fig(self, returned_table, usis_data):
-        chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
+        chem = Chemical()
         input_set=pd.DataFrame()
         for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
             usis = usis_data[usis_data['dtxsid']==dtxsid]

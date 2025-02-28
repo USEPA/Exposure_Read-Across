@@ -6,31 +6,42 @@ from rdkit import Chem
 
 class first_section:
     
-    def substance_input():
+    #Could combine these two functions, but am keeping them separate for orderliness 
 
+    def substance_input():
+        smiles_code = False
+        id_input=False
+        st.write(smiles_code)
+        st.write(id_input)
+            
         with st.container(border=True):
             st.markdown("## Chemical Input")
             st.markdown("### Input option 1: Structure")
             st.markdown("Draw the structure in the provided space below and then click the "
                         "`Apply` button to retrieve information on the chemical.")
-
-            smiles_code = False
             smiles_code = st_ketcher() #This is where the smiles code is returned 
-            
+       
+        st.write(smiles_code)
+        st.write(id_input)
+           
+        with st.form('textbox', clear_on_submit=True):    
             st.markdown("### Input option 2: Text ID input")
-            st.markdown("Input the CAS-RN or DTXSID or exact name of your chemical of interest and then press your 'enter' keyboard key")
+            st.markdown("Input the CAS-RN or DTXSID of your chemical of interest and then press the 'enter' keyboard key")
+            id_input = st.text_input('CAS-RN or DTXSID', value=None)
+            st.form_submit_button("Submit")
+        
+
+        st.write(smiles_code)
+        st.write(id_input)
             
-            #Will need to see if the interpreter reads past the ketcher call above 
-            id_input=False
-            id_input = st.text_input('CAS-RN, DTXSID, or exact name')
-
-
-            return smiles_code, id_input
+        return smiles_code, id_input
         
     def initial_details(smiles_code, id_entered):
-        chem = Chemical(x_api_key='aaa69edc-d6d6-4d60-83d1-d9bd8e82f12f')
+        chem = Chemical()
         has_dtxsid = False 
-    
+        #if smiles_code and id_entered:
+            #id_entered
+
         with st.container(border=True):
             if smiles_code:
                 inchikey = Chem.MolToInchiKey(Chem.MolFromSmiles(smiles_code))
