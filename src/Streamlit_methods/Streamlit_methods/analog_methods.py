@@ -73,6 +73,7 @@ class analog_class:
             DataFrame: the set of analogs of the target chemical 
 
         """
+
         #Chose feather as the datatype because it was the fastest datatype to read and write 
         if str(MFPs_address).endswith(".feather"):
             FP1 = pd.read_feather(MFPs_address)
@@ -194,10 +195,7 @@ class analog_class:
         predictor_return=seem_return[seem_return['predictor']==predictor_name]
         if not predictor_return.empty:
             pred_exp = predictor_return['median'].iloc[0]
-            if pred_exp > 0:
-                return math.log(pred_exp, 10)
-            else:
-                return None
+            return pred_exp
         else:
             return None
 
@@ -214,6 +212,24 @@ class analog_class:
         
         returned_set = pd.concat([main_set, cdr_addition])
         return returned_set
+    
+    def null_replacer(self, value, minimum):
+        #st.write(value)
+        if not value: 
+            value=minimum/100
+            #st.write("inside not")
+            return value
+        elif value <= 0:
+            value=minimum/100
+            #st.write("inside zero")
+            return value 
+        elif np.isnan(value):
+            value=minimum/100
+            #st.write("inside zero")
+            return value 
+        else:
+            #st.write("inside valid")
+            return value
    
    #Annotations and axis labels provide information 
    # on meaning of variables and structure
@@ -295,7 +311,7 @@ class analog_class:
                 axis=alt.Axis(title=''),
                 scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))), 
                 y = alt.Y('record_type:N', title=''),
-                color = alt.Color('Num_records:Q').scale(scheme='plasma').title("Number of Records")
+                color = alt.Color('Num_records:Q').scale(type='symlog', scheme='plasma').title("Number of Records")
                 ).configure_axis(labelLimit=1000)
             #.properties(width=660,height=330)
             st.altair_chart(cpdat_htmp)
@@ -352,6 +368,7 @@ class analog_class:
             nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
             nhanes_inferences = pd.read_csv(nhanes_path)            
             third_fig_input = pd.DataFrame()
+           
             #Model prediction data
             for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
 
@@ -395,18 +412,23 @@ class analog_class:
                                             "exposure_dose":[None, None, None, None, None,]})
                     
                 third_fig_input= pd.concat([third_fig_input, seem_df])
+            
+            min_set = third_fig_input[(third_fig_input['exposure_dose']>0) & (~np.isnan(third_fig_input['exposure_dose']))]
+            min_val = min_set['exposure_dose'].min()
+            third_fig_input['log_exposure_dose']=third_fig_input['exposure_dose'].apply(lambda x: self.null_replacer(x, min_val))
 
             modeled_htmp = alt.Chart(third_fig_input).mark_rect().encode(
             x = alt.X('substance_name:N', 
                 axis=alt.Axis(title=''),
                 scale=alt.Scale(domain=list(third_fig_input['substance_name'].unique()))),
             y = alt.Y('database:N', title=''),
-            color = alt.Color('exposure_dose:Q').scale(type="linear")
-                .title(['Base-10 Log of','Exposure Dose.',  'Originaly predicted in units of', '(mg/kg/day)'])
+            color = alt.Color('log_exposure_dose:Q').scale(type="log")
+                .title(['(mg/kg/day)'])
                 ).configure_axis(labelLimit=1000)
             #.properties(width=660,height=330), type = 'log', scheme='plasma',.scale(type="log")
 
-            st.markdown('####  Predicted exposure doses in units of mg/kg/day')
+            st.markdown('####  Predicted exposure doses')
+            st.markdown('##### ')
             st.altair_chart(modeled_htmp)
             
 

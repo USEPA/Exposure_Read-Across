@@ -4,25 +4,25 @@ from ctxpy import Chemical
 import altair as alt
 
 @st.cache_data
-def import_usis(script_location):
+def import_osha(script_location):
     
     """
-    Reads in the USIS dataset from Jacob Kvasnika
+    Reads in the osha dataset from Jacob Kvasnika
 
     Returns:
-        Dataframe: The Dataframe of USIS data
+        Dataframe: The Dataframe of osha data
     """
     #Looks like the interpreter is able to find the file 
-    usis = pd.read_feather(script_location/"data"/"usis_2023_with_dtxsid.feather")
+    osha = pd.read_feather(script_location/"data"/"osha_2023_with_dtxsid.feather")
 
-    return usis
+    return osha
 
-#Converts measurements in mg/m^3 into units of ppm,
+#Converts measurements in ppm into units of mg/m^3,
 # assuming pressure of 1 atm and temperature of 25 C=77F
 def ppm_to_mg (value, unit, mw)->float:
 
     """
-    Converts multiple starting units to ppm
+    Converts multiple starting units to mg/m^3
 
     Args:
         value (float or int): The numerical value of the air concentration of the chemical of interest.
@@ -49,42 +49,42 @@ def ppm_to_mg (value, unit, mw)->float:
 def osha_info(structure_dtxsid, script_location):
 
     chem = Chemical()
-    usis = import_usis(script_location)
+    osha = import_osha(script_location)
 
 
     with st.container(border=True):
-                usis_of_interest = usis[usis['dtxsid']==structure_dtxsid].copy()
+                osha_of_interest = osha[osha['dtxsid']==structure_dtxsid].copy()
 
-                if usis_of_interest.empty:
+                if osha_of_interest.empty:
                     st.markdown('### No exposure data available')
                 else:
                     #Include a note that all zero-values have been dropped
-                    usis_of_interest.drop('index', axis=1, inplace=True)
+                    osha_of_interest.drop('index', axis=1, inplace=True)
                     
-                    csv_usis_of_interest=usis_of_interest.to_csv(index=False)
-                    st.markdown('### USIS data on the entered substance')
+                    csv_osha_of_interest=osha_of_interest.to_csv(index=False)
+                    st.markdown('### OSHA data on the entered substance')
                     st.download_button(
                                     label="Download measured exposure data as CSV",
-                                    data=csv_usis_of_interest,
-                                    file_name="usis_data_on_chemical_of_interest.csv"
+                                    data=csv_osha_of_interest,
+                                    file_name="osha_data_on_chemical_of_interest.csv"
                                     )
                     #This dataframe will be displayed as a box and whisker plot
 
                     #Dropping entries with a value of zero, as these do not contain useful information
-                    usis_of_interest=usis_of_interest[usis_of_interest['exposure_level'] != '0']
-                    usis_of_interest=usis_of_interest[usis_of_interest['exposure_level'] != '0.0']
+                    osha_of_interest=osha_of_interest[osha_of_interest['exposure_level'] != '0']
+                    osha_of_interest=osha_of_interest[osha_of_interest['exposure_level'] != '0.0']
                     #Dropping "Fibers per cubic centimeter" and empty rows.
                     #Is not necessary to have a separate clause for null entries, 
                     # as those are classified as not being in the list.
-                    usis_of_interest = usis_of_interest[usis_of_interest['measure_unit_id'].isin(['M', 'P'])]
+                    osha_of_interest = osha_of_interest[osha_of_interest['measure_unit_id'].isin(['M', 'P'])]
 
                     deets = chem.details(by='dtxsid', word=structure_dtxsid)   
                     molar_mass = deets['averageMass']    
-                    usis_of_interest['exposure_level'] = usis_of_interest.apply(lambda x: ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
+                    osha_of_interest['exposure_level'] = osha_of_interest.apply(lambda x: ppm_to_mg (x.exposure_level, x.measure_unit_id, molar_mass), axis=1) 
                     
                     #Change the labeled unit type when the conversion is done
-                    usis_of_interest['measure_unit_id'] = 'M'
-                    usis_of_interest['measure_unit_name'] = 'Milligrams per cubic meter'
+                    osha_of_interest['measure_unit_id'] = 'M'
+                    osha_of_interest['measure_unit_name'] = 'Milligrams per cubic meter'
                    
                     #The units that are convertable to mg/m^3:
                         #P - mg/m3, #X- micrograms, Y - milligrams,
@@ -93,31 +93,31 @@ def osha_info(structure_dtxsid, script_location):
 
                     #Dropping any rows where the ppm_to_mg function returns a value of zero, 
                     # as these cannot be placed on a log scale 
-                    usis_of_interest = usis_of_interest[usis_of_interest['exposure_level']!='0'] 
+                    osha_of_interest = osha_of_interest[osha_of_interest['exposure_level']!='0'] 
 
                     naics_sector_or_sub = st.selectbox("Which level of NAICS results would you like to see?", ("NAICS Sector", "NAICS Subsector"))
-                    if not usis_of_interest.empty:
+                    if not osha_of_interest.empty:
                         st.markdown('#### Occupational inhalation exposure data on the entered substance from the combined datasets CEHD, OIS and IMIS, converted to units of mg/m^3')
                         if naics_sector_or_sub == "NAICS Subsector":
                             st.markdown('##### Data is separated by NAICS subsector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
-                            box_and_whisker_mg_m3 = alt.Chart(usis_of_interest).mark_boxplot().encode(
+                            box_and_whisker_mg_m3 = alt.Chart(osha_of_interest).mark_boxplot().encode(
                                 x= alt.X('exposure_level:Q', 
                                         scale=alt.Scale(type="log", 
-                                                        domain=[(usis_of_interest['exposure_level'].min())/10,
-                                                                (usis_of_interest['exposure_level'].max())*10 ])).title('Air concentration (ppm)'),
+                                                        domain=[(osha_of_interest['exposure_level'].min())/10,
+                                                                (osha_of_interest['exposure_level'].max())*10 ])).title('Air concentration (mg/m^3)'),
                                 y= alt.Y('naics_2022_subsector_title:N', 
                                          sort='-x',
                                          axis=alt.Axis(title='NAICS Subsector',
                                          titleX=-370))).configure_axis(labelLimit=1000)                                                                 
                             
                         if naics_sector_or_sub == "NAICS Sector":
-                            usis_of_interest_nona = usis_of_interest[usis_of_interest['naics_2022_sector_title'].notna()]
+                            osha_of_interest_nona = osha_of_interest[osha_of_interest['naics_2022_sector_title'].notna()]
                             st.markdown('##### Data is separated by NAICS sector. Any entries with units that cannot be converted to mg/m^3 or which have a non-inhalation sample type are not displayed.')
-                            box_and_whisker_mg_m3 = alt.Chart(usis_of_interest_nona).mark_boxplot().encode(
+                            box_and_whisker_mg_m3 = alt.Chart(osha_of_interest_nona).mark_boxplot().encode(
                                 x= alt.X('exposure_level:Q', 
                                         scale=alt.Scale(type="log", 
-                                                        domain=[(usis_of_interest_nona['exposure_level'].min())/10,
-                                                                (usis_of_interest_nona['exposure_level'].max())*10 ])).title('Air concentration (ppm)'),
+                                                        domain=[(osha_of_interest_nona['exposure_level'].min())/10,
+                                                                (osha_of_interest_nona['exposure_level'].max())*10 ])).title('Air concentration (mg/m^3)'),
                                 y= alt.Y('naics_2022_sector_title:N', 
                                         sort='-x',
                                         axis=alt.Axis(title='NAICS sector',
@@ -130,7 +130,7 @@ def osha_info(structure_dtxsid, script_location):
                     else:   
                         st.markdown('### No occupational inhalation data available')
     
-    return usis
+    return osha
 
     
 

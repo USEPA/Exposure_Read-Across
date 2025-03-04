@@ -11,8 +11,8 @@ class first_section:
     def substance_input():
         smiles_code = False
         id_input=False
-        st.write(smiles_code)
-        st.write(id_input)
+        #st.write(smiles_code)
+        #st.write(id_input)
             
         with st.container(border=True):
             st.markdown("## Chemical Input")
@@ -21,8 +21,8 @@ class first_section:
                         "`Apply` button to retrieve information on the chemical.")
             smiles_code = st_ketcher() #This is where the smiles code is returned 
        
-        st.write(smiles_code)
-        st.write(id_input)
+       # st.write(smiles_code)
+       # st.write(id_input)
            
         with st.form('textbox', clear_on_submit=True):    
             st.markdown("### Input option 2: Text ID input")
@@ -31,8 +31,8 @@ class first_section:
             st.form_submit_button("Submit")
         
 
-        st.write(smiles_code)
-        st.write(id_input)
+        #st.write(smiles_code)
+        #st.write(id_input)
             
         return smiles_code, id_input
         

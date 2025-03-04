@@ -16,8 +16,9 @@ def shared_content():
 
         if has_dtxsid:
             Streamlit_methods.cpdat_displays(target_dtxsid)
+            #osha_set is the OSHA info before any cleaning  
             osha_set = Streamlit_methods.osha_info(target_dtxsid, script_location)
-            Streamlit_methods.predicted_info(target_dtxsid, script_location)
+            Streamlit_methods.predicted_info(target_dtxsid, script_location, osha_set)
 
         return go_ahead, osha_set, script_location, ctxpy_smiles
     else:
