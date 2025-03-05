@@ -110,7 +110,7 @@ def predicted_info(structure_dtxsid, script_location, osha_data):
             Jeff_df = pd.DataFrame(top_jeff_cats)
 
         #Displaying figures of SEEM3 component model predictions     
-        with st.container(border=True):
+    with st.container(border=True):
                 st.markdown('## SEEM3 Component Model Predictions')
                 st.markdown('##### SEEM3 is the weighted consensus of 13 exposure models (known as its "component models"). Paper describing model available [here](https://doi.org/10.1021/acs.est.8b04056): ')
                 st.markdown('##### Table 2 of the above SEEM3 paper describes the component models displayed in the two figures below, including links to their sources')
@@ -162,7 +162,7 @@ def predicted_info(structure_dtxsid, script_location, osha_data):
                         #).configure_axis(labelLimit=1000)
                     final_chart = alt.layer(combined_bars, combined_chart).configure(autosize='fit')
                     st.header('Predictions in units of mg/kg/day')
-                    st.altair_chart(final_chart) #, use_container_width=True
+                    st.altair_chart(final_chart, use_container_width=True) #, use_container_width=True
                     st.markdown('#####  Figure note: "ChemSTEER user-defined model" is the average of the top five highest exposure estimates '
                                 'derived from the concentrations predicted by the "Predicted Occupational Exposure" model')
                 else:
