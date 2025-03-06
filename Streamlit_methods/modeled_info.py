@@ -3,6 +3,7 @@ import pandas as pd
 from ctxpy import Exposure
 import altair as alt
 
+
 @st.cache_data
 def minucci_loader(script_location):#Returns -> DataFrame, but declaring this in the function annotation throws an error
     """
@@ -25,6 +26,7 @@ def minucci_loader(script_location):#Returns -> DataFrame, but declaring this in
 
     return df
 
+
 def ChemSTEER_udm(air_conc):
     """
     Converts the concentration predictions to exposure estimates mg/kg/day
@@ -38,7 +40,7 @@ def ChemSTEER_udm(air_conc):
         float: predicted exposure dose from the input air concentration
     
     """
-    air_conc=float(air_conc)
+    air_conc = float(air_conc)
     #Where: 
     ED = 250 #integer, days exposed per year; 250 is all the weekdays in a year minus two weeks of vacation
     Cm = (10**(air_conc)) #None or float,  mass concentration of chemical in air (mg/m^3)
@@ -97,9 +99,9 @@ def predicted_info(structure_dtxsid, script_location, osha_data):
             else:
                 top_jeff_cats = minucci_portion.iloc[0:num_preds]
             
-            top_jeff_cats['median'] = top_jeff_cats['log_mgm3_pred_50th'].apply(ChemSTEER_udm)
-            top_jeff_cats['upper_confidence_interval'] = top_jeff_cats['log_mgm3_pred_97.5th'].apply(ChemSTEER_udm)
-            top_jeff_cats['lower_confidence_interval'] = top_jeff_cats['log_mgm3_pred_2.5th'].apply(ChemSTEER_udm)
+            top_jeff_cats['median'] = top_jeff_cats['log_mgm3_pred_50th'].apply(ChemSTEERUdm)
+            top_jeff_cats['upper_confidence_interval'] = top_jeff_cats['log_mgm3_pred_97.5th'].apply(ChemSTEERUdm)
+            top_jeff_cats['lower_confidence_interval'] = top_jeff_cats['log_mgm3_pred_2.5th'].apply(ChemSTEERUdm)
 
             top_jeff_cats.rename(columns={'subsector_name':'predictor'}, inplace=True)
             top_jeff_cats['Quantity Type'] = 'Predicted Occupational Inhalation Exposures'

@@ -4,9 +4,9 @@ from ctxpy import Chemical
 from rdkit import Chem
 
 
-class first_section:
+class FirstSection:
     
-    #Maybe I should have a button in the main program that brings this up
+    
     @st.dialog('Choose your input method', width='large')
     def id_dialog(self, id_choice):
 

@@ -6,7 +6,7 @@ def shared_content():
     script_location = pathlib.Path(__file__).parent.parent.parent.parent.resolve()
     smiles_code, user_input = False, False
 
-    first_section_instance = Streamlit_methods.first_section()
+    first_section_instance = Streamlit_methods.FirstSection()
     smiles_code, user_input = first_section_instance.substance_input()
 
     go_ahead = False
@@ -27,7 +27,7 @@ def shared_content():
 
         #Avoids the initial error message before a substance is input 
         return False, False, False, False
-    
+     
     
 
 

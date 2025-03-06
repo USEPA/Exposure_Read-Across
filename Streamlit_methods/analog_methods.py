@@ -8,9 +8,12 @@ from ctxpy import Chemical, Exposure
 import altair as alt
 import math
 
-class analog_class:
 
-    def ppm_to_mg (self, value, unit, mw)->float:
+class AnalogClass:
+    # Name of ppm_to_mg has been chosen to not follow
+    # PEP8 camel-case conventions, as the title PpmToMg
+    # is unclear
+    def ppm_to_mg(self, value, unit, mw) -> float:
 
         """
         Converts multiple starting units to ppm, assuming pressure of 1 atm and temperature of 25 C=77F
@@ -26,16 +29,15 @@ class analog_class:
         """
         value = float(value) 
         
-        #Converts ppm measurements into mg/m^3 
-        if unit=='P':
-            #Conversion formula from https://www.cdc.gov/niosh/docs/2004-101/calc.html                       
-            mg_per_m3_value  = (value*mw)/(24.45)
+        # Converts ppm measurements into mg/m^3 
+        if unit == 'P':
+            # Conversion formula from https://www.cdc.gov/niosh/docs/2004-101/calc.html                       
+            mg_per_m3_value = (value*mw)/(24.45)
             return mg_per_m3_value  
         elif unit=='M':
             return value
         else:
             return '0'
-
 
     def generate_ecfp(self, smiles: str, morg_fing):# -> numpy.ndarray
         """
@@ -54,7 +56,7 @@ class analog_class:
         return morg_fing.GetFingerprintAsNumPy(molecule)
 
 
-    def analog_finder(self, MFPs_address, chem_info_address, chem_smiles=None, unit_test=False, shah_id=None): # -> DataFrame
+    def AnalogFinder(self, MFPs_address, chem_info_address, chem_smiles=None, unit_test=False, shah_id=None): # -> DataFrame
         """
         Generates the list of analogs for the target chemical.
 
@@ -135,7 +137,7 @@ class analog_class:
         #Assign the Morgan fingerprints to the smiles code 
         FP_input_path = (script_location/"data"/"Morgan_fingerprints_of_DSSTox.feather")
         cd_input_path = (script_location/"data"/"brotli_Consolidated_DSSTox_QSAR_smiles_only.parq")
-        final_table=self.analog_finder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
+        final_table=self.AnalogFinder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
         final_table.drop(columns=['index'], inplace=True )
         final_table.rename(columns={'ID':'DTXSID', 'sim':'Similarity'}, inplace=True)       
         with st.container(border=True):
