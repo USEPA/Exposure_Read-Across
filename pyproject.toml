@@ -1,17 +1,31 @@
 [project]
-name = "Streamlit_methods"
+name = "exposura"
 version = "0.1.0"
-description = "Methods that are shared between pages"
+description = "Research project and package for perfoming exposure-based read across."
 authors = [
-    {name = "Samuel Van Amberg"}
+    {name = "Samuel Van Amberg",email="vanamberg.samuel@epa.gov"},
+    {name = "kaphillips",email = "phillips.katherine@epa.gov"}
 ]
-license = {text = "Y"}
+license = {text = "GNU GPLv3"}
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "<4.0,>=3.10"
 dependencies = [
+    "rdkit (>=2024.9.5,<2025.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "streamlit (>=1.42.1,<2.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "altair (>=5.5.0,<6.0.0)",
+    "ctx-python (>=0.0.1a7,<0.0.2)",
+    "streamlit-ketcher (>=0.0.1,<0.0.2)",
+    "numpy (<2.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.32.0"
+python-dotenv = "^1.0.1"
+
