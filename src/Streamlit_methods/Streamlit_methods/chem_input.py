@@ -6,37 +6,63 @@ from rdkit import Chem
 
 class first_section:
     
-    #Could combine these two functions, but am keeping them separate for orderliness 
+    #Maybe I should have a button in the main program that brings this up
+    @st.dialog('Choose your input method', width='large')
+    def id_dialog(self, id_choice):
 
-    def substance_input():
-        smiles_code = False
-        id_input=False
-        #st.write(smiles_code)
-        #st.write(id_input)
-            
-        with st.container(border=True):
-            st.markdown("## Chemical Input")
-            st.markdown("### Input option 1: Structure")
+        if id_choice == "Structure":
+            st.session_state.smiles_code = False
             st.markdown("Draw the structure in the provided space below and then click the "
                         "`Apply` button to retrieve information on the chemical.")
-            smiles_code = st_ketcher() #This is where the smiles code is returned 
-       
-       # st.write(smiles_code)
-       # st.write(id_input)
-           
-        with st.form('textbox', clear_on_submit=True):    
-            st.markdown("### Input option 2: Text ID input")
-            st.markdown("Input the CAS-RN or DTXSID of your chemical of interest and then press the 'enter' keyboard key")
-            id_input = st.text_input('CAS-RN or DTXSID', value=None)
-            st.form_submit_button("Submit")
+            st.session_state.smiles_code = st_ketcher() #This is where the smiles code is returned 
+            st.session_state.id_input = False
+            if st.session_state.smiles_code:
+                 st.rerun()
+        
+        if id_choice == "DTXSID or CAS-RN":
+            st.session_state.id_input = False
+            st.markdown("Input the DTXSID or CAS-RN of your chemical of interest and then press the 'enter' keyboard key")
+            st.session_state.id_input = st.text_input('DTXSID or CAS-RN', value=None)
+            st.session_state.smiles_code = False
+            if  st.session_state.id_input:
+                st.rerun()
         
 
-        #st.write(smiles_code)
-        #st.write(id_input)
-            
-        return smiles_code, id_input
+
+    def substance_input(self):
+        st.markdown('### Choose your desired method for chemical identity input '
+                    'from the drop-down menu. To retrieve information on an additional chemical, '
+                    'click the `Reset` button, then choose the desired input type')
         
-    def initial_details(smiles_code, id_entered):
+        searcher=False
+
+        searcher = st.selectbox("Chemical Search Method",("Structure","DTXSID or CAS-RN"), index=None)
+        
+        #Button must be below selection box for correct logical flow 
+        if st.button("Reset"):
+            del st.session_state.smiles_code
+            del st.session_state.id_input
+            searcher = False
+
+        #Condition executes when script has not been run or the "reset" button has been pressed
+        if ("smiles_code" not in st.session_state) and ("id_input" not in st.session_state) and searcher:
+            self.id_dialog(searcher)
+            
+        #Only one of the two session_state variables is assigned per run,
+        # requiring the set of conditional returns below 
+        if "smiles_code" in st.session_state:
+            if st.session_state.smiles_code:
+                return st.session_state.smiles_code, False
+        if "id_input" in st.session_state:   
+            if st.session_state.id_input:
+                return False, st.session_state.id_input    
+    
+        return False, False
+        
+        #return st.session_state.smiles_code, st.session_state.id_input
+    
+
+    def initial_details(self, smiles_code, id_entered):
         chem = Chemical()
         has_dtxsid = False 
         #if smiles_code and id_entered:
@@ -84,8 +110,9 @@ class first_section:
                 except:
                     #Catches structures for which a DTXSID cannot be assigned
                     has_dtxsid = False
-                    st.warning("No information can be found on a chemical with this structure. Check that the structure you drew is correct.")  
+                    st.warning("No information can be found on a chemical with this structure or ID. Check that the structure or ID you entered is correct.")  
 
+        #Need to return SMILES for later analog calculation
         return chem_dtxsid, has_dtxsid, hits_smiles
 
 
