@@ -5,8 +5,7 @@ from rdkit import Chem
 
 
 class FirstSection:
-    
-    
+
     @st.dialog('Choose your input method', width='large')
     def id_dialog(self, id_choice):
 
@@ -27,24 +26,23 @@ class FirstSection:
             if  st.session_state.id_input:
                 st.rerun()
         
-
-
     def substance_input(self):
         st.markdown('### Choose your desired method for chemical identity input '
                     'from the drop-down menu. To retrieve information on an additional chemical, '
                     'click the `Reset` button, then choose the desired input type')
         
-        searcher=False
+        searcher = False
 
         searcher = st.selectbox("Chemical Search Method",("Structure","DTXSID or CAS-RN"), index=None)
         
-        #Button must be below selection box for correct logical flow 
+        # Button must be below selection box for correct logical flow 
         if st.button("Reset"):
             del st.session_state.smiles_code
             del st.session_state.id_input
             searcher = False
 
-        #Condition executes when script has not been run or the "reset" button has been pressed
+        # Condition executes when script has not been run
+        # or the "reset" button has been pressed
         if ("smiles_code" not in st.session_state) and ("id_input" not in st.session_state) and searcher:
             self.id_dialog(searcher)
             
@@ -61,7 +59,6 @@ class FirstSection:
         
         #return st.session_state.smiles_code, st.session_state.id_input
     
-
     def initial_details(self, smiles_code, id_entered):
         chem = Chemical()
         has_dtxsid = False 

@@ -3,15 +3,15 @@
 
 
 from .chem_input import FirstSection
-from .cpdat_container import cpdat_displays
-from .osha_display import osha_info
-from .modeled_info import predicted_info
+from .reported_figures import ReportedInfo
+# from .osha_display import osha_info
+from .modeled_info import ModeledData
 from .analog_methods import AnalogClass
 from .pages_shared_content import shared_content
 
-#__all__ = ["ketcher_smiles", "intial_details"]
 
-__all__ = ["first_section", "cpdat_displays", "osha_info", "predicted_info", "analog_class", "shared_content"]
+__all__ = ["FirstSection", "ReportedInfo", "ModeledData",
+           "AnalogClass", "shared_content"]
 
 
  

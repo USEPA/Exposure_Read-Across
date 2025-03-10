@@ -5,6 +5,5 @@
 
 import Streamlit_methods
 
-osha_full = False
+# The shared_content module contains all code in common between the two pages of the web app
 entered, osha_full, function_location, ctx_smiles = Streamlit_methods.shared_content()       
-# end of file             

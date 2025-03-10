@@ -4,7 +4,7 @@
 import Streamlit_methods
 
 # This function runs the code that is shared between the two pages 
-entered, osha_full, function_location, ctx_smiles = Streamlit_methods.shared_content() 
+entered, osha_full, function_location, ctx_smiles = Streamlit_methods.shared_content()
 
 if entered:
 
@@ -13,9 +13,15 @@ if entered:
     #  rather than the SMILES returned by Ketcher  
     analog_table = analog_instance.analog_retrieve(function_location, ctx_smiles)                            
 
-    if not osha_full.empty:
-        # summary_figure = analog_instance.usis_summary_fig(analog_table, usis_full)
-        new_fig = analog_instance.osha_cpdat_cdr_seem(analog_table, osha_full, function_location)
+    # OSHA, CPDat, and CDR data display
+    analog_instance.osha_cpdat_cdr(analog_table, osha_full, function_location)
+    # Exposure pathway probabilities
+    analog_instance.exp_pthwy(analog_table, function_location)
+    # Model predictions display
+    analog_instance.model_prediction(analog_table, function_location)
+
+
+
 
 
  
