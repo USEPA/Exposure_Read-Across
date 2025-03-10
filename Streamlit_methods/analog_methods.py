@@ -245,7 +245,7 @@ class AnalogClass:
         cdr_mi = pd.read_parquet(run_from_location/'data'/'cdr_mi_plus_dtxsids.parq')
 
         self.analog_container.header("Summary of Structural Analog Data ")
-        self.analog_container.markdown("#### Availability of data on analogs from CPDat, CDR, and USIS.")
+        self.analog_container.markdown("#### Availability of data on analogs from CPDat, CDR, and OSHA.")
         
         # Iterates through the DataFrame of analogs,
         # adding data from each source on to a common dataframe 
