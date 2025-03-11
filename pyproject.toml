@@ -1,5 +1,5 @@
 [project]
-name = "exposura"
+name = "Streamlit_methods"
 version = "0.1.0"
 description = "Research project and package for perfoming exposure-based read across."
 authors = [
