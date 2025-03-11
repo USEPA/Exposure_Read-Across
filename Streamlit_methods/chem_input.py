@@ -20,15 +20,18 @@ class FirstSection:
         
         if id_choice == "DTXSID or CAS-RN":
             st.session_state.id_input = False
-            st.markdown("Input the DTXSID or CAS-RN of your chemical of interest and then press the 'enter' keyboard key")
+            st.markdown("Input the DTXSID or CAS-RN of your chemical of interest and then press the `enter` keyboard key")
             st.session_state.id_input = st.text_input('DTXSID or CAS-RN', value=None)
             st.session_state.smiles_code = False
             if  st.session_state.id_input:
                 st.rerun()
         
     def substance_input(self):
+        
         st.markdown('### Choose your desired method for chemical identity input '
-                    'from the drop-down menu. To retrieve information on an additional chemical, '
+                    'from the drop-down menu. To retrieve information on an '
+                    'additional chemical (or if the input box is not popping up '
+                    'after the input type is selected), '
                     'click the `Reset` button, then choose the desired input type')
         
         searcher = False

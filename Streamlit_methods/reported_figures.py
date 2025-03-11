@@ -2,7 +2,6 @@ import streamlit as st
 from ctxpy import Exposure
 import pandas as pd
 import altair as alt
-from ctxpy import Chemical
 
 
 class ReportedInfo:
@@ -10,7 +9,7 @@ class ReportedInfo:
         self.structure_dtxsid = retrieved_dtxsid
         self.reported_container = st.container(border=True)
         self.script_location = script_location
-   
+    
     def functional_use(self):
         expo = Exposure()
         
@@ -20,22 +19,21 @@ class ReportedInfo:
         # too wide to display as side-by-side columns
 
         self.reported_container.markdown('## Reported Information ')
-        self.reported_container.markdown('##### Mouse-over any entries whose labels are cut off to see the full labels')
-        self.reported_container.markdown('##### Data pulled from CPDAT by DTXSID ')
-        # Cannot find a way to control the size of header text;
-        # none of the options desrcribed in the documentation work
+        self.reported_container.markdown("Reported consumer use information is obtained from the EPA "
+                                         "Chemicals and Products Database (CPDat) v4.0."
+                                         " using EPA's CTX APIs. To interactively "
+                                         "explore this database, visit our [Chemical Exposure "
+                                         "Knowledgebase (ChemExpo)](https://comptox.epa.gov/chemexpo).")   
+        self.reported_container.markdown('##### Hover over any datapoint or bar on a figure '
+                                         'to see its full set of labels')
+            
         self.reported_container.divider()
 
         # Pulling reported functional use
         function_info = expo.search_cpdat(vocab_name="fc", 
                                             dtxsid=self.structure_dtxsid)
         function_info = pd.DataFrame(function_info)
-        function_info_csv = function_info.to_csv(index=False)
-        self.reported_container.download_button(
-                            label="Download all substance functional use data as CSV",
-                            data=function_info_csv,
-                            file_name="functional_use_data.csv"
-                            )
+        
             
         if function_info.empty:
             self.reported_container.markdown('### No Reported Function information available')
@@ -43,10 +41,8 @@ class ReportedInfo:
             #Dropping id, dtxsid, docid columns 
             function_info.drop(columns=['id','dtxsid','docid',], inplace=True)
             
-            
             #Dropping rows with no function information 
             function_info=function_info[function_info['reportedfunction'].notna()]
-            
 
             function_info.rename(columns={'datatype':'Data Type', 
                                         'doctitle':'Document Title', 
@@ -74,10 +70,23 @@ class ReportedInfo:
                 color=alt.Color('Reported Function', scale=alt.Scale(scheme='category20') )
             ).configure_axis(labelLimit=1000)
             self.reported_container.markdown('### Functional Use Information')
+            self.reported_container.markdown(f"For more information about Function Categories and how they are used "
+                                             "in CPDat, visit "
+                                             "[the Function Categories page](https://comptox.epa.gov/chemexpo/functional_use_categories/) "
+                                             "on ChemExpo.")
             self.reported_container.altair_chart(docs_per_function_cat, use_container_width = True)
-            self.reported_container.markdown("##### Figure note: Collected documents containing entered substance grouped by reported function within a function category. " 
+            function_info_csv = function_info.to_csv(index=False)
+            self.reported_container.download_button(
+                            label="Download all substance functional use data as CSV",
+                            data=function_info_csv,
+                            file_name="functional_use_data.csv"
+                            )
+            self.reported_container.markdown("Figure displays the number of documents containing the entered substance in CPDAT,"
+                                             " grouped within a stack by reported function within a function category. " 
                                              "Only data with a reported function has been included. "
-                                             "This data facilitates the understanding of the uses of the entered substance by displaying the substance's reported functions."
+                                             "This data facilitates the understanding of the uses of the"
+                                             " entered substance. "
+                                             "Data used to generated this figure can be obtained from the Download Data button below."
                                              )
 
     # Now pulling list presence information                 
@@ -85,8 +94,10 @@ class ReportedInfo:
         expo = Exposure()
     
         self.reported_container.markdown('### List Presence Information')
-        self.reported_container.markdown('##### The lists on which the entered substance is present.'
-                                         'These provide additional information about the contexts in which the substance is used.')
+        self.reported_container.markdown('For more information about List Presence Keywords and how they are '
+                    'used in CPDat, visit the '
+                    '[List Presence Keywords page](https://comptox.epa.gov/chemexpo/list_presence_tags/) '
+                    'on ChemExpo.')
         list_presence = expo.search_cpdat(vocab_name='lpk', dtxsid=self.structure_dtxsid)
         list_presence = pd.DataFrame(list_presence)
         if list_presence.empty:
@@ -102,12 +113,18 @@ class ReportedInfo:
                                             'organization': 'Organization',
                                         }, inplace=True)
             self.reported_container.dataframe(list_presence) 
-        
+            self.reported_container.markdown('Table displays the lists on which the entered substance is present. '
+                                             'These provide additional information about the contexts in which the substance is used.')
+       
     # Pulling product-inclusion data 
     def product_inclusion(self):
         expo = Exposure()
     
         self.reported_container.markdown('### Products Reporting This Substance')
+        puc_url = 'https://comptox.epa.gov/chemexpo/pucs/'
+        self.reported_container.markdown('For more information about Product Use Categories and how they are '
+                f'used in CPDat, visit the [Product Use Categories page]({puc_url}) on '
+                'ChemExpo.')
         pucs = expo.search_cpdat(vocab_name='puc', dtxsid=self.structure_dtxsid)
         pucs_available = pd.DataFrame(pucs)
         if pucs_available.empty:
@@ -133,12 +150,8 @@ class ReportedInfo:
                                             }, inplace=True)
                 
                 pucs_available_csv=pucs_available.to_csv(index=False)
-                self.reported_container.download_button(
-                            label="Download product use data as CSV",
-                            data=pucs_available_csv,
-                            file_name="functional_use_data.csv"
-                            )
-                pucs_available.drop(columns=['id','dtxsid','docid',], inplace=True)
+                
+                pucs_available.drop(columns=['id', 'dtxsid', 'docid',], inplace=True)
                 puc_show_opts = self.reported_container.selectbox("Which level of PUC results would you like to see?", ("General Category", 'PUC general category + PUC product family'))
 
                 if puc_show_opts=='PUC general category + PUC product family':
@@ -174,7 +187,7 @@ class ReportedInfo:
 
 
                 show_all_check = self.reported_container.checkbox("Show all PUC categories")
-                self.reported_container.write("PUC categories represented by only a small number of products" 
+                self.reported_container.write("PUC categories represented by only a small number of products " 
                             "have been hidden. Click the checkbox above to show them") 
                 if not show_all_check:
                     grouped_pucs.sort_values(by='Number of product names', 
@@ -192,10 +205,24 @@ class ReportedInfo:
                             titleX=-350),
                     )).configure_axis(labelLimit=1000) 
                 self.reported_container.altair_chart(prods_per_catfam, use_container_width = True)
-            
-            # Bare "except" used due to wanting to inform user
-            # that error was encountered without
-            # program halting
+                self.reported_container.download_button(
+                            label="Download product use data as CSV",
+                            data=pucs_available_csv,
+                            file_name="functional_use_data.csv"
+                            )
+                self.reported_container.markdown("Figure displays the Number of unique CPDat "
+                                                    "products that contain the "
+                                                    "entered substance and have been assigned a Product Use "
+                                                    "Category (PUC). Using the drop-down menu above, you can select the PUC-"
+                                                    "level to use for aggregation. Checking the `Truncate Results` box above"
+                                                    " will limit the number of categories for display (if there is a large "
+                                                    "number). Data used to generated this figure can be obtained from the "
+                                                    "`Download Data` button above.")
+                
+                
+                
+            # Bare "except" used due to inform user
+            # that error was encountered without program halting
             except:
                 self.reported_container.error("Error encountered when retrieving product use information")
 

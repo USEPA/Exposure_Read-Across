@@ -1,8 +1,10 @@
 # Although streamlit pages have the option of starting the page titles with a number 
 #  to set their rank, doing this prevents importing functions into unit tests
-
+import streamlit as st
 import Streamlit_methods
 
+st.title("Exposure information on the target substance and its structural analogs")
+st.divider()
 # This function runs the code that is shared between the two pages 
 entered, osha_full, function_location, ctx_smiles = Streamlit_methods.shared_content()
 # "entered" stores whether the user has entered a
