@@ -5,7 +5,8 @@ import Streamlit_methods
 
 # This function runs the code that is shared between the two pages 
 entered, osha_full, function_location, ctx_smiles = Streamlit_methods.shared_content()
-
+# "entered" stores whether the user has entered a
+# valid structure or DTXSID 
 if entered:
 
     analog_instance = Streamlit_methods.AnalogClass()

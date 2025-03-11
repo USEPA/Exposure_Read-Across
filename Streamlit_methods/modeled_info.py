@@ -65,8 +65,7 @@ class ModeledData:
         # Displays Quantitative Structure-Use Relationship data
         expo = Exposure()
         self.modeled_container.header(' Predicted Information', divider=True)
-        self.modeled_container.markdown('#### To allow more-informed decision-making, '
-                    'model predictions can fill information gaps for substances that are in DSSTox ' 
+        self.modeled_container.markdown('#### Model predictions can fill information gaps for substances that are in DSSTox ' 
                     'but do not have sufficient exposure information available in the fields above.')
         self.modeled_container.markdown("### Predicted Functional Use")
         self.modeled_container.markdown('#### Data pulled from EPA QSUR models. Paper available [here](https://pubs.rsc.org/en/content/articlelanding/2017/gc/c6gc02744j#!divCitation):')
@@ -115,7 +114,7 @@ class ModeledData:
         
         self.modeled_container.markdown('## SEEM3 Component Model Predictions')
         self.modeled_container.markdown('##### SEEM3 is the weighted consensus of 13 exposure models (known as its "component models"). Paper describing model available [here](https://doi.org/10.1021/acs.est.8b04056): ')
-        self.modeled_container.markdown('##### Table 2 of the above SEEM3 paper describes the component models displayed in the two figures below, including links to their sources')
+        self.modeled_container.markdown('##### Table 2 of the above SEEM3 paper describes the component models displayed in the figure below, including links to their sources')
         
         dat_sources= expo.search_exposures(by="seem", dtxsid=self.structure_dtxsid)
         dat_sources= pd.DataFrame(dat_sources)

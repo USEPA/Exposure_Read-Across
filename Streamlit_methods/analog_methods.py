@@ -11,7 +11,7 @@ import math
 
 class AnalogClass:
     def __init__(self):
-        self.analog_container = st.container(border=True)
+        pass
 
     def ppm_to_mg(self, value, unit, mw) -> float:
 
@@ -158,7 +158,7 @@ class AnalogClass:
         input_set=pd.DataFrame()
         for dtxsid, chem_name in zip (returned_table['DTXSID'], returned_table['PREFERRED_NAME']):
             osha = osha_data[osha_data['dtxsid']==dtxsid]
-            # Cleaning USIS for use in the analog-summarizing program
+            # Cleaning OSHA for use in the analog-summarizing program
             osha.drop('index', axis=1, inplace=True)
             osha=osha[osha['exposure_level'] != '0']
             osha=osha[osha['exposure_level'] != '0.0']
@@ -237,6 +237,7 @@ class AnalogClass:
     # on meaning of variables and structure
     def osha_cpdat_cdr(self, returned_table, osha_data, run_from_location):
        
+        AnalogClass.analog_container = st.container(border=True)
         expo = Exposure()
         input_set = pd.DataFrame()
 
@@ -244,8 +245,8 @@ class AnalogClass:
         cdr_ipu = pd.read_parquet(run_from_location/'data'/'cdr_ipu_plus_dtxsids.parq')
         cdr_mi = pd.read_parquet(run_from_location/'data'/'cdr_mi_plus_dtxsids.parq')
 
-        self.analog_container.header("Summary of Structural Analog Data ")
-        self.analog_container.markdown("#### Availability of data on analogs from CPDat, CDR, and OSHA.")
+        AnalogClass.analog_container.header("Summary of Structural Analog Data ")
+        AnalogClass.analog_container.markdown("#### Availability of data on analogs from CPDat, CDR, and OSHA.")
         
         # Iterates through the DataFrame of analogs,
         # adding data from each source on to a common dataframe 
@@ -259,7 +260,7 @@ class AnalogClass:
 
             osha_addition = pd.DataFrame({'Substance_Name':[chem_name],
                                 'Num_records':[num_osha_measurements],
-                                'record_type':['Record in USIS']
+                                'record_type':['Record in OSHA']
                                 })
             input_set = pd.concat([input_set, osha_addition])
             
@@ -315,7 +316,7 @@ class AnalogClass:
             color = alt.Color('Num_records:Q').scale(type='symlog', scheme='plasma').title("Number of Records")
             ).configure_axis(labelLimit=1000)
         #.properties(width=660,height=330)
-        self.analog_container.altair_chart(cpdat_htmp)
+        AnalogClass.analog_container.altair_chart(cpdat_htmp)
 
     def exp_pthwy(self, returned_table, run_from_location):
         #Exposure pathway probabilities
@@ -364,11 +365,13 @@ class AnalogClass:
                 ).configure_axis(labelLimit=1000)
         #.properties(width=660,height=330)
         
-        self.analog_container.markdown('#### Estimated probability of exposure through common pathways')
-        self.analog_container.markdown('##### Estimates of probability below 0.5 have been made blank ')
-        self.analog_container.altair_chart(ip_htmp)
+        AnalogClass.analog_container.markdown('#### Estimated probability of exposure through common pathways')
+        AnalogClass.analog_container.markdown('##### Estimates of probability below 0.5 have been made blank ')
+        AnalogClass.analog_container.altair_chart(ip_htmp)
 
     def model_prediction(self, returned_table, run_from_location):
+        expo = Exposure()
+
         # Model prediction data
         nhanes_path = (run_from_location/"data"/"NHANES_inferences.csv")
         nhanes_inferences = pd.read_csv(nhanes_path)
@@ -431,9 +434,9 @@ class AnalogClass:
             ).configure_axis(labelLimit=1000)
         #.properties(width=660,height=330), type = 'log', scheme='plasma',.scale(type="log")
 
-        self.analog_container.markdown('####  Predicted exposure doses')
-        self.analog_container.markdown('##### ')
-        self.analog_container.altair_chart(modeled_htmp)
+        AnalogClass.analog_container.markdown('####  Predicted exposure doses')
+        AnalogClass.analog_container.markdown('##### ')
+        AnalogClass.analog_container.altair_chart(modeled_htmp)
             
 
 
