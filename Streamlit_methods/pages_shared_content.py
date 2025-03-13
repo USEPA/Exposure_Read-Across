@@ -24,7 +24,8 @@ def shared_content():
                                                                     id_entered))
 
         if has_dtxsid:
-            reported_data = Streamlit_methods.ReportedInfo(target_dtxsid,script_location)
+            reported_data = Streamlit_methods.ReportedInfo(target_dtxsid,
+                                                           script_location)
             # Displays functional-use data
             reported_data.functional_use()
             # Displays list presence data
@@ -44,8 +45,6 @@ def shared_content():
             # Displays seem3 data
             # along with selected minnuci model data
             modeled_data.seem3_and_minucci()
-
-            
 
         return go_ahead, osha_set, script_location, ctxpy_smiles
     else:

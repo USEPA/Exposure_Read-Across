@@ -65,14 +65,22 @@ class ModeledData:
         # Displays Quantitative Structure-Use Relationship data
         expo = Exposure()
         self.modeled_container.header(' Predicted Information', divider=True)
-        self.modeled_container.markdown('#### Model predictions can fill information gaps for substances that are in DSSTox ' 
-                    'but do not have sufficient exposure information available in the fields above.')
+        
+        self.modeled_container.markdown("Reported Information is always a gold standard for data. "
+                    "However, as is often the case with exposure science, many data are "
+                    "lacking for the thousands of chemicals humans interact with. For "
+                    "these cases, EPA and others have developed *gap-filling* models to "
+                    "predict data when no reported data are available. Use of predicted "
+                    "information should acknowledge that these data are not perfect.")
+        
         self.modeled_container.markdown("### Predicted Functional Use")
-        self.modeled_container.markdown('#### Data pulled from EPA QSUR models. Paper available [here](https://pubs.rsc.org/en/content/articlelanding/2017/gc/c6gc02744j#!divCitation):')
+        self.modeled_container.markdown('EPA Quantitative Structure-Use Relationship (QSUR) model predictions.'
+                                        ' These are a set of machine-learning based models that predict uses for chemicals based on their structures')                                
+        self.modeled_container.markdown('[Paper describing model](https://pubs.rsc.org/en/content/articlelanding/2017/gc/c6gc02744j#!divCitation)')
         predicted_info = expo.search_qsurs(dtxsid=self.structure_dtxsid)
         predicted_info = pd.DataFrame(predicted_info)
         if predicted_info.empty:
-            self.modeled_container.markdown('### No Reported Function information available')
+            self.modeled_container.error('No Reported Function information available')
         else:
             predicted_info.rename(columns={'harmonizedFunctionalUse':'Harmonized Functional Use'},
                                 inplace=True)
@@ -81,8 +89,11 @@ class ModeledData:
         
     def minucci_model(self):
         # Output from Jeff's model
-        self.modeled_container.markdown('### Predicted Occupational Exposure')
-        self.modeled_container.markdown('#### Paper describing model available [here](https://pubs.acs.org/doi/10.1021/acs.est.2c08234):')
+        self.modeled_container.markdown('### EPA Occupational Inhalation Exposure Model')
+        self.modeled_container.markdown('This model predicts the industries that a chemical will be present in, '
+                                        'as well as the air-concentration of that chemical, '
+                                        'using the physicochemical properties of the chemical.')
+        self.modeled_container.markdown('[Paper describing model](https://pubs.acs.org/doi/10.1021/acs.est.2c08234)')
         minucci = self.minucci_loader()
         # Need to be able to share minucci_portion with seem3_and_minucci method
         ModeledData.minucci_portion = minucci[minucci['dtxsid'] == self.structure_dtxsid].copy()
@@ -113,8 +124,10 @@ class ModeledData:
         Jeff_df = pd.DataFrame(top_jeff_cats)
         
         self.modeled_container.markdown('## SEEM3 Component Model Predictions')
-        self.modeled_container.markdown('##### SEEM3 is the weighted consensus of 13 exposure models (known as its "component models"). Paper describing model available [here](https://doi.org/10.1021/acs.est.8b04056): ')
-        self.modeled_container.markdown('##### Table 2 of the above SEEM3 paper describes the component models displayed in the figure below, including links to their sources')
+        self.modeled_container.markdown('SEEM3 is the consensus of 13 exposure models weighted '
+                                        'according to predictive ability.')
+        self.modeled_container.markdown('[Paper describing model](https://doi.org/10.1021/acs.est.8b04056)')
+        self.modeled_container.markdown('Table 2 of the SEEM3 paper above describes the component models used in constructing the consensus estimate, including links to their sources')
         
         dat_sources= expo.search_exposures(by="seem", dtxsid=self.structure_dtxsid)
         dat_sources= pd.DataFrame(dat_sources)
@@ -150,10 +163,10 @@ class ModeledData:
             )
 
             final_chart = alt.layer(combined_bars, combined_chart).configure(autosize='fit')
-            self.modeled_container.header('Predictions in units of mg/kg/day')
+           # self.modeled_container.header('Predictions in units of mg/kg/day')
             self.modeled_container.altair_chart(final_chart, use_container_width=True)
-            self.modeled_container.markdown('#####  Figure note: "ChemSTEER user-defined model" is the average of the top five highest exposure estimates '
-                        'derived from the concentrations predicted by the "Predicted Occupational Exposure" model')
+            # self.modeled_container.markdown('#####  Figure note: "ChemSTEER user-defined model" is the average of the top five highest exposure estimates '
+            #             'derived from the concentrations predicted by the "Predicted Occupational Exposure" model')
         else:
             self.modeled_container.error('No data is available for figure')
 

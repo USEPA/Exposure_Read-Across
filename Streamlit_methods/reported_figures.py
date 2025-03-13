@@ -36,7 +36,7 @@ class ReportedInfo:
         
             
         if function_info.empty:
-            self.reported_container.markdown('### No Reported Function information available')
+            self.reported_container.error('No Reported Function information available')
         else:
             #Dropping id, dtxsid, docid columns 
             function_info.drop(columns=['id','dtxsid','docid',], inplace=True)
@@ -101,7 +101,7 @@ class ReportedInfo:
         list_presence = expo.search_cpdat(vocab_name='lpk', dtxsid=self.structure_dtxsid)
         list_presence = pd.DataFrame(list_presence)
         if list_presence.empty:
-            self.reported_container.markdown('### No List Presence information available')
+            self.reported_container.error('No List Presence information available')
         else:
             list_presence.drop(columns=['id', 'dtxsid', 'docid',], inplace=True)
             list_presence.rename(columns={'doctitle': 'Document Title', 
@@ -128,7 +128,7 @@ class ReportedInfo:
         pucs = expo.search_cpdat(vocab_name='puc', dtxsid=self.structure_dtxsid)
         pucs_available = pd.DataFrame(pucs)
         if pucs_available.empty:
-            self.reported_container.markdown('### No PUC Information Available')
+            self.reported_container.error('No PUC Information Available')
         else:
             try:
                 pucs_available.rename(columns={'doctitle':'Document Title', 
@@ -233,10 +233,10 @@ class ReportedInfo:
     def import_osha(_self):
         
         """
-        Reads in the osha dataset from Jacob Kvasnika
+        Reads in the OSHA CEHD dataset produced by Jeff Minucci's model 
 
         Returns:
-            Dataframe: The Dataframe of osha data
+            Dataframe: The DataFrame of osha data
         """
         osha = pd.read_feather(_self.script_location/"data"/"osha_processed_full.feather")
         osha.rename(columns={'conc_mgm3': 'exposure_level',
@@ -247,6 +247,14 @@ class ReportedInfo:
         return osha
 
     def osha_info(self):
+        self.reported_container.markdown('### OSHA Occupational Monitoring Information')
+        self.reported_container.markdown('This data consists of the industrial-hygiene samples of '
+                                         'airborne contaminant presence taken by OSHA compliance '
+                                         'officers from 1984 to 2022 for the '
+                                         'OSHA Chemical Exposure Health Data (CEHD) database,'
+                                         ' including samples in a worker’s '
+                                         'personal breathing space, samples in the shared working area, '
+                                         'and bulk samples of the products being produced.')
 
         osha = self.import_osha()
         
@@ -254,7 +262,7 @@ class ReportedInfo:
         osha_of_interest = osha[osha['dtxsid'] == self.structure_dtxsid].copy()
 
         if osha_of_interest.empty:
-            self.reported_container.markdown('### No exposure data available')
+            self.reported_container.error('No exposure data available')
         else:
             #Include a note that all zero-values have been dropped
             #osha_of_interest.drop('index', axis=1, inplace=True)
@@ -320,11 +328,9 @@ class ReportedInfo:
                                 sort='-x',
                                 axis=alt.Axis(title='NAICS sector',
                                 titleX=-370))).configure_axis(labelLimit=1000)                                                                 
-                    
 
                 self.reported_container.altair_chart(box_and_whisker_mg_m3, use_container_width = True)
-                # st.markdown('##### Figure note: Chart type is box-and-whisker, but for some substances only outliers can be seen')
             else:   
-                self.reported_container.markdown('### No occupational inhalation data available')
+                self.reported_container.error('No occupational inhalation data available')
 
         return osha

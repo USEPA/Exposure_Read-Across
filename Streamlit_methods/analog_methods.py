@@ -34,7 +34,7 @@ class AnalogClass:
             # Conversion formula from https://www.cdc.gov/niosh/docs/2004-101/calc.html                       
             mg_per_m3_value = (value*mw)/(24.45)
             return mg_per_m3_value  
-        elif unit=='M':
+        elif unit == 'M':
             return value
         else:
             return '0'
@@ -76,16 +76,16 @@ class AnalogClass:
 
         """
 
-        #Chose feather as the datatype because it was the fastest datatype to read and write 
+        # Chose feather as the datatype because it was the fastest datatype to read and write 
         if str(MFPs_address).endswith(".feather"):
             FP1 = pd.read_feather(MFPs_address)
-        #The files for unit testing are .parq type, requiring the conditional below
+        # The files for unit testing are .parq type, requiring the conditional below
         if str(MFPs_address).endswith(".parq"):
             FP1 = pd.read_parquet(MFPs_address)
         consolidated_dsstox = pd.read_parquet(chem_info_address)
         consolidated_dsstox.rename(columns={'DTXSID':'ID'}, inplace=True)
 
-        #The below two conditionals are necessary to avoid an error with pytest 
+        # The below two conditionals are necessary to avoid an error with pytest 
         if unit_test==True:
             mfgen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=1024)
         if unit_test==False:
@@ -96,48 +96,50 @@ class AnalogClass:
             interest_fp = interest_fp.T
             print(interest_fp)
         if unit_test == True:
-            #Transposition necessary because dataframe is single column, when needs to be a row 
-            interest_fp=pd.DataFrame(FP1.loc[shah_id]).T
+            # Transposition necessary because dataframe is single column, when needs to be a row 
+            interest_fp = pd.DataFrame(FP1.loc[shah_id]).T
             print(interest_fp)
 
         KNR = KNeighborsRegressor(n_neighbors=10, algorithm='auto', leaf_size=30, p=2, metric='jaccard', 
-                            metric_params=None, n_jobs=-1,)
+                                  metric_params=None, n_jobs=-1,)
 
         Y = np.ones(FP1.shape[0])
         KNR.fit(FP1, Y)
 
-        #I2I assigns a numerical index value to the DTXSID index of FP1
+        # I2I assigns a numerical index value to the DTXSID index of FP1
         I2I = dict(zip(range(FP1.shape[0]),FP1.index))
         
-        #This is the line that actually assigns the nearest neighbors and outputs the 
-        # dataframe with ID of substance of interest and list of NN's 
-        #whole_Sim is the similarities of the top ten most similar
-        #whole_Ind is the indices in FP1 of the nearest neighbors  
+        # This is the line that actually assigns
+        # the nearest neighbors and outputs the
+        # dataframe with ID of substance of interest and list of NN's
+        # whole_Sim is the similarities of the top ten most similar
+        # whole_Ind is the indices in FP1 of the nearest neighbors
         whole_Sim, whole_Ind = KNR.kneighbors(interest_fp)
         
-        #While the target substance cannot be referenced by DTXSID, the selected structural analogs can.
+        # While the target substance cannot be referenced by DTXSID,
+        # the selected structural analogs can.
         
-        #Since whole_Sim and whole_Ind are for only a single chemical, 
+        # Since whole_Sim and whole_Ind are for only a single chemical, 
         # the relevant target chemical does not need to be pulled out by index
         Sim = whole_Sim.T.flatten() 
         
-        #Need to generate Ind by pulling the DTXSID's of the I2I values at the index values of Ind
+        # Need to generate Ind by pulling the DTXSID's of the
+        # I2I values at the index values of Ind
         Ind = [I2I[index_val] for index_val in whole_Ind.T.flatten()]
 
         k = 10
         NNi= pd.DataFrame(dict(ID=Ind,sim=Sim)).iloc[:(k+1)]
         NNi = NNi.merge(consolidated_dsstox,on='ID')
         NNi["sim"] = 1-NNi['sim']
-        
-
+    
         return NNi
 
     def analog_retrieve(self, script_location, smiles_code):  
         
-        #Assign the Morgan fingerprints to the smiles code 
+        # Assign the Morgan fingerprints to the smiles code 
         FP_input_path = (script_location/"data"/"Morgan_fingerprints_of_DSSTox.feather")
         cd_input_path = (script_location/"data"/"brotli_Consolidated_DSSTox_QSAR_smiles_only.parq")
-        final_table=self.AnalogFinder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
+        final_table = self.AnalogFinder(FP_input_path, cd_input_path, chem_smiles=smiles_code)
         final_table.drop(columns=['index'], inplace=True )
         final_table.rename(columns={'ID':'DTXSID', 'sim':'Similarity'}, inplace=True)       
         with st.container(border=True):
@@ -236,7 +238,7 @@ class AnalogClass:
     # Annotations and axis labels provide information
     # on meaning of variables and structure
     def osha_cpdat_cdr(self, returned_table, osha_data, run_from_location):
-       
+
         AnalogClass.analog_container = st.container(border=True)
         expo = Exposure()
         input_set = pd.DataFrame()
@@ -247,6 +249,9 @@ class AnalogClass:
 
         AnalogClass.analog_container.header("Summary of Structural Analog Data ")
         AnalogClass.analog_container.markdown("#### Availability of data on analogs from CPDat, CDR, and OSHA.")
+        AnalogClass.analog_container.markdown("Chemical Data Reporting (CDR) consists of data reported"
+                                              " from manufacturers and importers on the "
+                                              "production volume and uses of chemicals on the US market.")
         
         # Iterates through the DataFrame of analogs,
         # adding data from each source on to a common dataframe 
@@ -435,7 +440,8 @@ class AnalogClass:
         #.properties(width=660,height=330), type = 'log', scheme='plasma',.scale(type="log")
 
         AnalogClass.analog_container.markdown('####  Predicted exposure doses')
-        AnalogClass.analog_container.markdown('##### ')
+        AnalogClass.analog_container.markdown('Entries with no data available have been assigned an exposure level of '
+                                              'one-tenth the smallest available exposure')
         AnalogClass.analog_container.altair_chart(modeled_htmp)
             
 

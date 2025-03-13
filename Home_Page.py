@@ -34,7 +34,7 @@ st.markdown('On either page, begin by choosing from the drop-down menu'
             ' by entering a text ID (CAS-RN or DTXSID).'
             ' This choice will cause a input field to pop up.'
             ' Once you have submitted your chemical of interest,'
-            ' the application will retrieve all available information on it.')
+            ' the application will retrieve and display all available information on it.')
 
 st.markdown('Annotations above each data-source '
             'suggest potential uses and interpretive approaches'
