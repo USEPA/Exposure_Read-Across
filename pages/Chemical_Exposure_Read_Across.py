@@ -14,7 +14,7 @@ if entered:
     analog_instance = Streamlit_methods.AnalogClass()
     # Am now generating analogs using the SMILES code returned by ctx-py, 
     #  rather than the SMILES returned by Ketcher  
-    analog_table = analog_instance.analog_retrieve(function_location, ctx_smiles)                            
+    analog_table = analog_instance.analog_retrieve(function_location, ctx_smiles)
 
     # OSHA, CPDat, and CDR data display
     analog_instance.osha_cpdat_cdr(analog_table, osha_full, function_location)
