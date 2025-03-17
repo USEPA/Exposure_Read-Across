@@ -36,8 +36,8 @@ def shared_content():
             # osha_set is the OSHA info before any cleaning  
             osha_set = reported_data.osha_info()
             modeled_data = Streamlit_methods.ModeledData(target_dtxsid,
-                                                          script_location,
-                                                          osha_set)
+                                                         script_location,
+                                                         osha_set)
             # Displays Quantitative Structure-Use Relationship data
             modeled_data.qsur_display()
             # Output from Jeff's model
