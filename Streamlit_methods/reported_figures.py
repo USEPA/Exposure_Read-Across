@@ -65,10 +65,10 @@ class ReportedInfo:
                                                     ignore_index=True))
             
             grouped_cfi = (chart_function_info
-                         .groupby(by=['Reported Function',
-                                      'Function Category'])
-                         .size()
-                         .reset_index(name='Docs per function'))
+                           .groupby(by=['Reported Function',
+                                        'Function Category'])
+                           .size()
+                           .reset_index(name='Docs per function'))
             # Experimented with making this plot vertical,
             # but decided that it looked
             # worse, due to the bars being much shorter
