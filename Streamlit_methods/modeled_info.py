@@ -259,7 +259,3 @@ class ModeledData:
                   "with all default parameters accepted. Only results "
                   "for the NAICS sectors with the largest "
                   "predicted concentrations are shown for simplicity."))
-
-
-
-

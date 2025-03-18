@@ -21,7 +21,7 @@ class AnalogClass:
     def ppm_to_mg(self, value, unit, mw) -> float:
 
         """
-        Converts multiple starting units to ppm, assuming pressure of 1 atm and 
+        Converts multiple starting units to ppm, assuming pressure of 1 atm and
         temperature of 25 C=77F
 
         Args:
@@ -34,14 +34,14 @@ class AnalogClass:
         Returns:
             float: The air concentration.
         """
-        value = float(value) 
-        
+        value = float(value)
+
         # Converts ppm measurements into mg/m^3
         if unit == 'P':
             # Conversion formula found at
             # https://www.cdc.gov/niosh/docs/2004-101/calc.html
             mg_per_m3_value = (value*mw)/(24.45)
-            return mg_per_m3_value  
+            return mg_per_m3_value
         elif unit == 'M':
             return value
         else:
@@ -56,14 +56,14 @@ class AnalogClass:
 
         Returns:
             numpy.ndarray: The Morgan fingerprint of the target substance
-        
+
         """
         molecule = Chem.MolFromSmiles(smiles)
         if molecule is None:
             return None
         return morg_fing.GetFingerprintAsNumPy(molecule)
 
-    def AnalogFinder(self, MFPs_address, chem_info_address, 
+    def AnalogFinder(self, MFPs_address, chem_info_address,
                      chem_smiles=None, unit_test=False, shah_id=None):  # -> DataFrame
         """
         Generates the list of analogs for the target chemical.
@@ -99,7 +99,7 @@ class AnalogClass:
         consolidated_dsstox.rename(columns={'DTXSID': 'ID'}, inplace=True)
 
         # The below two conditionals are necessary
-        # to avoid an error with pytest 
+        # to avoid an error with pytest
         if unit_test:
             mfgen = rdFingerprintGenerator.GetMorganGenerator(radius=2,
                                                               fpSize=1024)
@@ -113,12 +113,12 @@ class AnalogClass:
             interest_fp = interest_fp.T
             print(interest_fp)
         if unit_test:
-            # Transposition necessary because dataframe is single column, 
+            # Transposition necessary because dataframe is single column,
             # when needs to be a row 
             interest_fp = pd.DataFrame(FP1.loc[shah_id]).T
             print(interest_fp)
 
-        KNR = KNeighborsRegressor(n_neighbors=10, algorithm='auto', leaf_size=30, 
+        KNR = KNeighborsRegressor(n_neighbors=10, algorithm='auto', leaf_size=30,
                                   p=2, metric='jaccard',
                                   metric_params=None, n_jobs=-1,)
 
@@ -127,21 +127,21 @@ class AnalogClass:
 
         # I2I assigns a numerical index value to the DTXSID index of FP1
         I2I = dict(zip(range(FP1.shape[0]), FP1.index))
-        
+
         # This is the line that actually assigns
         # the nearest neighbors and outputs the
         # dataframe with ID of substance of interest and list of NN's
         # whole_Sim is the similarities of the top ten most similar
         # whole_Ind is the indices in FP1 of the nearest neighbors
         whole_Sim, whole_Ind = KNR.kneighbors(interest_fp)
-        
+
         # While the target substance cannot be referenced by DTXSID,
         # the selected structural analogs can.
-        
-        # Since whole_Sim and whole_Ind are for only a single chemical, 
+
+        # Since whole_Sim and whole_Ind are for only a single chemical,
         # the relevant target chemical does not need to be pulled out by index
-        Sim = whole_Sim.T.flatten() 
-        
+        Sim = whole_Sim.T.flatten()
+
         # Need to generate Ind by pulling the DTXSID's of the
         # I2I values at the index values of Ind
         Ind = [I2I[index_val] for index_val in whole_Ind.T.flatten()]
@@ -150,15 +150,15 @@ class AnalogClass:
         NNi = pd.DataFrame(dict(ID=Ind, sim=Sim)).iloc[:(k+1)]
         NNi = NNi.merge(consolidated_dsstox, on='ID')
         NNi["sim"] = 1-NNi['sim']
-    
+
         return NNi
 
-    def analog_retrieve(self, script_location, smiles_code):  
-        
-        # Assign the Morgan fingerprints to the smiles code 
-        FP_input_path = (script_location / "data" / 
+    def analog_retrieve(self, script_location, smiles_code):
+
+        # Assign the Morgan fingerprints to the smiles code
+        FP_input_path = (script_location / "data" /
                          "Morgan_fingerprints_of_DSSTox.feather")
-        cd_input_path = (script_location / "data" / 
+        cd_input_path = (script_location / "data" /
                          "brotli_Consolidated_DSSTox_QSAR_smiles_only.parq")
         final_table = self.AnalogFinder(FP_input_path, cd_input_path,
                                         chem_smiles=smiles_code)
@@ -194,14 +194,14 @@ class AnalogClass:
             deets = chem.details(by='dtxsid', word=dtxsid)
             molar_mass = deets['monoisotopicMass']    
             osha['exposure_level'] = (osha
-                                      .apply(lambda x: 
+                                      .apply(lambda x:
                                              self.ppm_to_mg(x.exposure_level,
                                                             x.measure_unit_id,
                                                             molar_mass),
                                              axis=1))
             osha['measure_unit_id'] = 'M'
             osha['measure_unit_name'] = 'Milligrams per cubic meter'
-            osha = osha[osha['exposure_level']!='0'] 
+            osha = osha[osha['exposure_level']!='0']
 
             grouped_bysubs = (osha
                               .groupby('naics_2022_subsector_title')['exposure_level']
@@ -222,7 +222,7 @@ class AnalogClass:
             # arrangement breaking PEP8 line-length guidelines 
             x=alt.X('substance_name:N',
                     axis=alt.Axis(title=''),
-                    scale=alt.Scale(domain=list(input_set['substance_name'].unique()))), 
+                    scale=alt.Scale(domain=list(input_set['substance_name'].unique()))),
             y=alt.Y('naics_2022_subsector_title:N',
                     axis=alt.Axis(title='NAICS Subsector',
                                   titleX=-300)),
@@ -340,9 +340,9 @@ class AnalogClass:
             num_fc_measurements = fc_presence_df.shape[0]
             if num_fc_measurements == 0:
                 num_fc_measurements = None
-            fc_addition = pd.DataFrame({'Substance_Name':[chem_name],
-                                'Num_records':[num_fc_measurements],
-                                'record_type':['CPDat: Functional Use']
+            fc_addition = pd.DataFrame({'Substance_Name': [chem_name],
+                                        'Num_records': [num_fc_measurements],
+                                        'record_type': ['CPDat: Functional Use']
                                         })
             input_set = pd.concat([input_set, fc_addition])
 
@@ -368,7 +368,7 @@ class AnalogClass:
         cpdat_htmp = alt.Chart(input_set).mark_rect().encode(
             x=alt.X('Substance_Name:N',
                     axis=alt.Axis(title=''),
-                    scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))), 
+                    scale=alt.Scale(domain=list(input_set['Substance_Name'].unique()))),
             y=alt.Y('record_type:N', title=''),
             color=(alt
                    .Color('Num_records:Q')
@@ -383,7 +383,7 @@ class AnalogClass:
         expo = Exposure()
 
         for dtxsid, chem_name in zip(returned_table['DTXSID'],
-                                      returned_table['PREFERRED_NAME']):
+                                     returned_table['PREFERRED_NAME']):
 
             input_pathways = expo.search_exposures(by='pathways',
                                                    dtxsid=dtxsid)
@@ -412,9 +412,9 @@ class AnalogClass:
                     industry_prob = None
 
                 pathways = {'Exposure_Type': ['Dietary Exposure Probability:',
-                                             'Residential Exposure Probability:',
-                                             'Pesticide Exposure Probability:',
-                                             'Industrial Exposure Probability:'],
+                                              'Residential Exposure Probability:',
+                                              'Pesticide Exposure Probability:',
+                                              'Industrial Exposure Probability:'],
                             'Exposure_Probabilities': [diet_prob,
                                                        res_prob,
                                                        pest_prob,
@@ -473,16 +473,16 @@ class AnalogClass:
                                           'exposure_dose':[nhanes_info_log]})
                 
             else:
-                nhanes_df = pd.DataFrame({'database':["NHANES inferred exposures"],
-                                        'substance_name':[chem_name],
-                                        "exposure_dose":[None]})
+                nhanes_df = pd.DataFrame({'database': ["NHANES inferred exposures"],
+                                          'substance_name': [chem_name],
+                                          'exposure_dose': [None]})
                 
             third_fig_input = pd.concat([third_fig_input, nhanes_df])
 
             seem = pd.DataFrame(expo.search_exposures(by="seem", dtxsid=dtxsid))
 
             if not seem.empty:
-                pred_exp_log = self.modeled_fig_input(seem, 'SEEM3 Consensus', )
+                pred_exp_log = self.modeled_fig_input(seem, 'SEEM3 Consensus',)
                 pred_shed_dir_log = self.modeled_fig_input(seem, 'SHEDS.Direct')
                 pred_shed_indir_log = self.modeled_fig_input(seem, 'SHEDS.Indirect')
                 raidar_far_pred_log = self.modeled_fig_input(seem, 'RAIDAR')
@@ -490,7 +490,7 @@ class AnalogClass:
 
                 expo_preds = {'database': ["SEEM3 consensus", "SHEDS-HT direct",
                                           "SHEDS-HT direct", "RAIDAR Far-Field",
-                                          "RAIDAR Indoor and Consumer" ],
+                                          "RAIDAR Indoor and Consumer"],
                               'substance_name': [chem_name]*5,
                               "exposure_dose": [pred_exp_log,
                                                 pred_shed_dir_log,
@@ -500,7 +500,7 @@ class AnalogClass:
                 seem_df = pd.DataFrame(expo_preds)
             else:
 
-                expo_preds = {'database':["SEEM3 consensus", "SHEDS-HT direct",
+                expo_preds = {'database': ["SEEM3 consensus", "SHEDS-HT direct",
                                           "SHEDS-HT direct", "RAIDAR Far-Field",
                                           "RAIDAR Indoor and Consumer"],
                               'substance_name': [chem_name]*5,
@@ -540,35 +540,3 @@ class AnalogClass:
                    'an exposure level of one-tenth '
                    'the smallest available exposure'))
         AnalogClass.analog_container.altair_chart(modeled_htmp)
-            
-
-
-
-
-
-
-
-
-
-            
-
-                
-                
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-

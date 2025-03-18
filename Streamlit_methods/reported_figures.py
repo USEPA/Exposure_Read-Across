@@ -37,7 +37,7 @@ class ReportedInfo:
         self.reported_container.divider()
 
         # Pulling reported functional use
-        function_info = expo.search_cpdat(vocab_name="fc", 
+        function_info = expo.search_cpdat(vocab_name="fc",
                                           dtxsid=self.structure_dtxsid)
         function_info = pd.DataFrame(function_info)
            
@@ -45,11 +45,11 @@ class ReportedInfo:
             self.reported_container.error('No Reported Function '
                                           'information available')
         else:
-            # Dropping id, dtxsid, docid columns 
+            # Dropping id, dtxsid, docid columns
             function_info.drop(columns=['id', 'dtxsid', 'docid'], inplace=True)
             
-            #Dropping rows with no function information 
-            function_info=function_info[function_info['reportedfunction'].notna()]
+            # Dropping rows with no function information 
+            function_info = function_info[function_info['reportedfunction'].notna()]
 
             function_info.rename(columns={'datatype':'Data Type',
                                           'doctitle':'Document Title',
@@ -161,7 +161,7 @@ class ReportedInfo:
              .reported_container
              .caption("The List Presence Keywords "
                       "associated with documents that "
-                      f"contain the chemical {self.structure_dtxsid} " 
+                      f"contain the chemical {self.structure_dtxsid} "
                       "on which the "
                       "entered substance is present."))
        
@@ -192,7 +192,7 @@ class ReportedInfo:
                    "generated this figure can be "
                    "obtained from the `Download Data` button below the figure "
                    "caption."))
-        pucs = expo.search_cpdat(vocab_name='puc', 
+        pucs = expo.search_cpdat(vocab_name='puc',
                                  dtxsid=self.structure_dtxsid)
         pucs_available = pd.DataFrame(pucs)
         if pucs_available.empty:
@@ -220,7 +220,7 @@ class ReportedInfo:
                 
                 pucs_available_csv = pucs_available.to_csv(index=False)
                 
-                pucs_available.drop(columns=['id', 'dtxsid', 'docid',], 
+                pucs_available.drop(columns=['id', 'dtxsid', 'docid',],
                                     inplace=True)
                 puc_show_opts = (self
                                  .reported_container
@@ -280,9 +280,9 @@ class ReportedInfo:
                            "above to show them."))
                 if not show_all_check:
                     (grouped_pucs
-                     .sort_values(by='Number of product names', 
-                                  ascending=False, 
-                                  ignore_index=True, 
+                     .sort_values(by='Number of product names',
+                                  ascending=False,
+                                  ignore_index=True,
                                   inplace=True))
                     topval = grouped_pucs['Number of product names'][0]
                     idx = grouped_pucs['Number of product names'] > (topval*.025)
@@ -389,9 +389,9 @@ class ReportedInfo:
                    osha_of_interest['exposure_level'] == '0.0')
             osha_of_interest = osha_of_interest[~idx]
 
-            #Dropping "Fibers per cubic centimeter" and empty rows.
-            #Is not necessary to have a separate clause for null entries, 
-            # as those are classified as not being in the list.
+            # Dropping "Fibers per cubic centimeter" and empty rows.
+            # Is not necessary to have a separate clause for null entries,
+            #  as those are classified as not being in the list.
             idx = osha_of_interest['measure_unit_id'].isin(['M', 'P'])
             osha_of_interest = osha_of_interest[idx]
             
@@ -407,7 +407,7 @@ class ReportedInfo:
             #Not convertable:
             # F - fibers/cc, % - percentage of bulk material    
 
-            #Dropping any rows where the ppm_to_mg function returns a value of zero, 
+            #Dropping any rows where the ppm_to_mg function returns a value of zero,
             # as these cannot be placed on a log scale 
             
             osha_of_interest = osha_of_interest[osha_of_interest['exposure_level'] != 0]
@@ -445,10 +445,10 @@ class ReportedInfo:
                                                  scale=alt.Scale(type="log",
                                                                  domain=expo_range))
                                             .title('Air concentration (mg/m^3)')),
-                                        y= alt.Y('naics_2022_subsector_title:N',
-                                                 sort='-x',
-                                                 axis=alt.Axis(title='NAICS Subsector',
-                                                               titleX=-370)))
+                                        y=alt.Y('naics_2022_subsector_title:N',
+                                                sort='-x',
+                                                axis=alt.Axis(title='NAICS Subsector',
+                                                              titleX=-370)))
                                 .configure_axis(labelLimit=1000))
                     
                 if naics_sector_or_sub == "NAICS Sector":
@@ -467,18 +467,19 @@ class ReportedInfo:
                     box_plot = (alt.Chart(osha_of_interest_nona)
                                 .mark_boxplot()
                                 .encode(x=(alt.X('exposure_level:Q',
-                                                  scale=alt.Scale(type="log",
-                                                                  domain=expo_range))
+                                                 scale=alt.Scale(type="log",
+                                                                 domain=expo_range))
                                             .title('Air concentration (mg/m^3)')),
                                         y=alt.Y('naics_2022_sector_title:N',
-                                                 sort='-x',
-                                                 axis=alt.Axis(title='NAICS sector',
-                                                               titleX=-370)))
+                                                sort='-x',
+                                                axis=alt.Axis(title='NAICS '
+                                                                    'sector',
+                                                              titleX=-370)))
                                 .configure_axis(labelLimit=1000))
 
                 self.reported_container.altair_chart(box_plot,
                                                      use_container_width=True)
-            else:   
+            else:
                 (self
                  .reported_container
                  .error('No occupational inhalation data available'))

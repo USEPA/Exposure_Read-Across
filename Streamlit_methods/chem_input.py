@@ -49,7 +49,7 @@ class FirstSection:
                                 ("Structure", "DTXSID or CAS-RN"),
                                 index=None)
         
-        # Button must be below selection box for correct logical flow 
+        # Button must be below selection box for correct logical flow
         if st.button("Reset"):
             del st.session_state.smiles_code
             del st.session_state.id_input
@@ -133,7 +133,7 @@ class FirstSection:
                     st.markdown(f'**Substance SMILES Identifier**: {hits_smiles}')
                     st.markdown(f'**Substance DSSTox ID**: {chem_dtxsid}')
                 except:
-                    #Catches structures for which a DTXSID cannot be assigned
+                    # Catches structures for which a DTXSID cannot be assigned
                     has_dtxsid = False
                     st.warning("No information can be found on a chemical with"
                                " this "
@@ -143,6 +143,3 @@ class FirstSection:
 
         # Need to return SMILES for later analog calculation
         return chem_dtxsid, has_dtxsid, hits_smiles
-
-
-

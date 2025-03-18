@@ -51,9 +51,3 @@ def shared_content():
 
         # Avoids the initial error message before a substance is input
         return False, False, False, False
-     
-    
-
-
-
-
