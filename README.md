@@ -1,7 +1,7 @@
-# Exposure_Read_Across (Exposure-based Read Across)
+# Exposure Data Viewer
 ### Created by: Samuel Van Amberg
 
-A web app for presenting data on analogs of new chemicals to OPPT New Chemical evaluators
+A web app for searching and viewing exposure relevant data for chemicals.
 
 ## Installation Steps
 
@@ -16,8 +16,8 @@ Navigate to the cloned `Exposure_Read-Across` folder in your preferred command-l
 
 ## Usage
 The application currently has two use-cases:
-1. To look-up exposure-relevant information for a specified chemical (done via the `Analog_Information_Not_Included.py` page)
-2. To look-up and summarize exposure-relevant information for chemical analogues of a specified chemical (done via the `Analog_Information_Included.py` page)
+1. To look-up exposure-relevant information for a specified chemical (done via the `Chemical_Exposure_Information_Search.py` page)
+2. To look-up and summarize exposure-relevant information for chemical analogues of a specified chemical (done via the `Chemical_Exposure_Read_Across.py` page)
 
 ## Credit
 
