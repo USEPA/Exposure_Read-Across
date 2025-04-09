@@ -8,6 +8,7 @@ A web app for presenting data on analogs of new chemicals to OPPT New Chemical e
 1. Obtain a personal API Key for the CTX APIs. You can request a key by emailing [ccte_api@epa.gov](mailto:ccte_api@epa.gov).
 2. Clone the repository. This can be done by navigating on the command line to your desired location for the installation of this repo and then typing `git clone https://github.com/USEPA/Exposure_Read-Across.git` 
 3. Navigate to the `Exposure_Read_Across` directory that you created by cloning above and type `pip install .`
+4. After installation of dependencies (namely `ctx-python`) type `ctx_init --x-api-key YourPersonalAPIKey` into the command line. `YourPersonalAPIKey` is the key you obtain from installation step 1.
 
 ## Running the app
  
